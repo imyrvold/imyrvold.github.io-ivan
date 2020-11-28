@@ -6,6 +6,7 @@ import Plot
 struct Ivan: Website {
     enum SectionID: String, WebsiteSectionID {
         // Add the sections that you want your website to contain here:
+        case projects
         case vapor
         case life
     }
@@ -16,8 +17,8 @@ struct Ivan: Website {
 
     // Update these properties to configure your website:
     var url = URL(string: "https://ivan.myrvold.blog")!
-    var name = "Ivan's Blog"
-    var description = "I live in a small beautiful seaside town in south Norway called Lillesand. My interests is in Web technologies, Cloud (AWS, Digital Ocean), Terraform, Ansible, server-side Swift, MacOS and iOS."
+    var name = "Ivan C Myrvold"
+    var description = "I live in a small beautiful seaside town in south Norway called Lillesand. My interests is in Web technologies, Cloud (AWS, Digital Ocean), Terraform, Ansible, Server-side Swift, MacOS and iOS."
     var language: Language { .english }
     var imagePath: Path? { nil }
 }
