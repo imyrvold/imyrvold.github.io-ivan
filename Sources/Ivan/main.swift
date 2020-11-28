@@ -2,7 +2,7 @@ import Foundation
 import Publish
 import Plot
 import SplashPublishPlugin
-import IvanPublishTheme
+import BrianPublishTheme
 
 // This type acts as the configuration for your website.
 struct Ivan: Website {
@@ -26,8 +26,4 @@ struct Ivan: Website {
 }
 
 // This will generate your website using the built-in Foundation theme:
-try Ivan().publish(
-    withTheme: .ivan,
-    plugins: [.splash(withClassPrefix: "")]
-)
- 
+try Ivan().publish(withTheme: .brian)

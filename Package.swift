@@ -13,12 +13,13 @@ let package = Package(
     dependencies: [
         .package(name: "Publish", url: "https://github.com/johnsundell/publish.git", from: "0.7.0"),
         .package(name: "SplashPublishPlugin", url: "https://github.com/johnsundell/splashpublishplugin", from: "0.1.0"),
-        .package(name: "IvanPublishTheme", url: "https://github.com/imyrvold/IvanPublishTheme.git", from: "1.0.0")
+        .package(name: "IvanPublishTheme", url: "https://github.com/imyrvold/IvanPublishTheme.git", from: "1.0.0"),
+        .package(name: "BrianPublishTheme", url: "https://github.com/dinsen/brianpublishtheme", from: "0.1.0")
     ],
     targets: [
         .target(
             name: "Ivan",
-            dependencies: ["Publish", "SplashPublishPlugin", "IvanPublishTheme"]
+            dependencies: ["Publish", "SplashPublishPlugin", "IvanPublishTheme", "BrianPublishTheme"]
         )
     ]
 )
