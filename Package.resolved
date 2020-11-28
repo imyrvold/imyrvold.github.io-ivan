@@ -30,7 +30,7 @@
       },
       {
         "package": "IvanPublishTheme",
-        "repositoryURL": "git@github.com:imyrvold/IvanPublishTheme.git",
+        "repositoryURL": "https://github.com/imyrvold/IvanPublishTheme.git",
         "state": {
           "branch": null,
           "revision": "1670eb3df47b84bcf2d567fbc1919b2e7a36bed1",
