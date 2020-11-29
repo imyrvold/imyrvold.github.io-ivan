@@ -26,4 +26,8 @@ struct Ivan: Website {
 }
 
 // This will generate your website using the built-in Foundation theme:
-try Ivan().publish(withTheme: .ivan)
+try Ivan().publish(
+    withTheme: .ivan,
+    plugins: [.splash(withClassPrefix: "")]
+)
+ 
