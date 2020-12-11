@@ -20,7 +20,7 @@ struct Ivan: Website {
     // Update these properties to configure your website:
     var url = URL(string: "https://ivan.myrvold.blog")!
     var name = "Ivan C Myrvold"
-    var description = "I live in a small beautiful seaside town in south Norway called Lillesand. My interests are in Web technologies, Cloud (AWS, DigitalOcean), Terraform, Ansible, Server-side Swift, MacOS and iOS."
+    var description = "I live in a small beautiful seaside town in south Norway called Lillesand. My technical interests are in Web technologies, Cloud (AWS, DigitalOcean), Terraform, Ansible, Server-side Swift, MacOS and iOS."
     var language: Language { .english }
     var imagePath: Path? { nil }
 }
