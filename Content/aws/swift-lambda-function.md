@@ -5,7 +5,7 @@ tags: lambda, aws, docker
 ---
 # Deploy a Lambda Function with a Swift Image
 
-Under re:invent 2020 AWS announced support for container image containing Lambda function. This made me think about how to make a Swift Lambda function with a Docker image.
+Under re:Invent 2020 AWS announced support for container image containing Lambda function. This made me think about how to make a Swift Lambda function with a Docker image.
 
 Fabian Fett made an excellent [post](https://fabianfett.de/getting-started-with-swift-aws-lambda-runtime) how to use [swift-aws-lambda-runtime](https://github.com/swift-server/swift-aws-lambda-runtime) to make a swift lambda function.
 
@@ -14,9 +14,6 @@ Can we use that to make a new image for AWS Lambda? Yes, you can, and in this po
 ## Make the SquareNumber project
 We need only a few files for the project. The Dockerfile uses the amazonlinux2 swift docker image to build the `SquareNumber` function.
 The compiled function is copied into the public lambda al2 image.
-
-Remember to login to the public ECR repository before you build the image:
-`aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws`
 
 ![SquareNumber project](/images/lambda/Dockerfile.png)
 
@@ -65,6 +62,9 @@ Lambda.run { (context, input: Input, callback: @escaping (Result<Output, Error>)
 ```
 
 ### Build the Docker image
+Before you build the image, you must login to the public AWS repository:
+`aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws`
+
 Make sure you are in the root directory of the project, where `Dockerfile` is, and build the docker image and tag it with your account id:
 `docker build -t <AWS account id>.dkr.ecr.eu-west-1.amazonaws.com/squarenumber .`
 Remember the period at the end, that means that the build should take place in the current directory.
@@ -72,6 +72,9 @@ Remember the period at the end, that means that the build should take place in t
 When the new docker image is built, you can push it to your ECR repository.
 If you haven't created the repository, you can do it with this command:
 `aws ecr create-repository --repository-name squarenumber`
+
+Before you push it, you must login to your private ECR:
+`aws ecr get-login-password | docker login --username=AWS --password-stdin <AWS account id>.dkr.ecr.eu-west-1.amazonaws.com`
 
 Then you can push the image to ECR: `docker push <AWS account id>.dkr.ecr.eu-west-1.amazonaws.com/squarenumber:latest`
 
