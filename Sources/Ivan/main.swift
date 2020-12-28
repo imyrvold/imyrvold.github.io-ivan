@@ -10,6 +10,7 @@ struct Ivan: Website {
         // Add the sections that you want your website to contain here:
         case projects
         case vapor
+        case aws
         case life
     }
 
