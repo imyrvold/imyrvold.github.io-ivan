@@ -1,6 +1,6 @@
 ---
 date: 2020-12-28 11:15
-description: Deploy Vapor app with Continuous Integration/Delivery to AWS ECS Fargate
+description: Deploy a Lambda Function with a Swift Image
 tags: lambda, aws, docker
 ---
 # Deploy a Lambda Function with a Swift Image
