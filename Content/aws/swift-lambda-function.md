@@ -73,7 +73,7 @@ When the new docker image is built, you can push it to your ECR repository.
 If you haven't created the repository, you can do it with this command:
 `aws ecr create-repository --repository-name squarenumber`
 
-Then you can push the image to ECR: `docker push 515051544254.dkr.ecr.eu-west-1.amazonaws.com/squarenumber:latest`
+Then you can push the image to ECR: `docker push <AWS account id>.dkr.ecr.eu-west-1.amazonaws.com/squarenumber:latest`
 
 ### Create Lambda Function
 Now we are ready to create the lambda function. Navigate to the AWS Lambda console, click the `Create function` button, and fill in the details:
