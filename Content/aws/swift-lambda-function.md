@@ -3,6 +3,7 @@ date: 2020-12-28 11:15
 description: Deploy a Lambda Function with a Swift Image
 tags: lambda, aws, docker
 ---
+###### Published 2020-12-28
 # Deploy a Lambda Function with a Swift Image
 
 Under re:Invent 2020 AWS announced support for container image containing Lambda function. This made me think about how to make a Swift Lambda function with a Docker image.

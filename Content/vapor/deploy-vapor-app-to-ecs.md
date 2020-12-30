@@ -3,6 +3,7 @@ date: 2020-12-11 07:00
 description: Step-by-step how to deploy a Vapor app to ECS Fargate with AWS Cloud Development Kit
 tags: vapor, cdk, aws, ecs
 ---
+###### Published 2020-12-11
 # Deploy a Vapor app to ECS Fargate with CDK
 
 ## How I started using CDK

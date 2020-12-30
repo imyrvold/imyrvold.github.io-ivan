@@ -3,6 +3,7 @@ date: 2020-12-21 07:00
 description: Deploy Vapor app with Continuous Integration/Delivery to AWS ECS Fargate
 tags: vapor, cdk, aws, ecs
 ---
+###### Published 2020-12-21
 # Deploy a Vapor app with CI/CD to ECS Fargate with CDK
 
 ## The project
