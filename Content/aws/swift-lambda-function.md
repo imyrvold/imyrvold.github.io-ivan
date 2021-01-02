@@ -1,7 +1,7 @@
 ---
 date: 2020-12-28 11:15
 description: Deploy a Lambda Function with a Swift Image
-tags: lambda, aws, docker
+tags: lambda, aws, docker, swift
 ---
 ###### Published 2020-12-28
 # Deploy a Lambda Function with a Swift Image

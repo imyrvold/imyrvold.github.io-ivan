@@ -3,6 +3,7 @@ import Publish
 import Plot
 import SplashPublishPlugin
 import IvanPublishTheme
+//import HighlightJSPublishPlugin
 
 // This type acts as the configuration for your website.
 struct Ivan: Website {
@@ -27,8 +28,10 @@ struct Ivan: Website {
 }
 
 // This will generate your website using the built-in Foundation theme:
+//try Ivan().publish(using: [.installPlugin(.highlightJS())])
+
 try Ivan().publish(
     withTheme: .ivan,
-    plugins: [.splash(withClassPrefix: "")]
+    plugins: [.splash(withClassPrefix: "")/*, .highlightJS()*/]
 )
  
