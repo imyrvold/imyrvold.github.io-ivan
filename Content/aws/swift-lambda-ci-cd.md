@@ -1,7 +1,7 @@
 ---
 date: 2021-01-02 12:00
 description: Make a continuous delivery of Swift Lambda in AWS
-tags: lambda, aws, docker, swift
+tags: lambda, api-gateway, aws, docker, swift
 ---
 ###### Published 2021-01-02
 # Make a continuous delivery of Swift Lambda in AWS
@@ -309,7 +309,7 @@ export class SquareNumberLambdaStack extends cdk.Stack {
 }
 ```
 And the last file to add is the `lambda-deployment.ts` file.
-Add the `lib/lambda-deployment.ts` filw with the following content:
+Add the `lib/lambda-deployment.ts` file with the following content:
 
 ``` typescript
 import * as cdk from '@aws-cdk/core';
