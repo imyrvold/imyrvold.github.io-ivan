@@ -1,9 +1,9 @@
 ---
-date: 2020-12-30 12:00
+date: 2021-01-02 12:00
 description: Make a continuous delivery of Swift Lambda in AWS
 tags: lambda, aws, docker, swift
 ---
-###### Published 2020-12-30
+###### Published 2021-01-02
 # Make a continuous delivery of Swift Lambda in AWS
 
 I showed in my [previous post](/aws/swift-lambda-function) how to make a Lambda function in AWS. Wouldn't it be great to have any changes of the source code in the Lambda function trigger a continuous delivery/deployment of the Lambda function in AWS? This is what this post is about. We will use CDK to set up a pipeline in AWS so that any changes in the Lambda code you push to GitHub will automatically install a revised Lambda function in AWS without you ever think about it.
