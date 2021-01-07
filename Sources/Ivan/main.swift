@@ -12,6 +12,7 @@ struct Ivan: Website {
         case projects
         case vapor
         case aws
+        case ios
         case life
     }
 
