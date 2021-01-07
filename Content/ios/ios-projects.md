@@ -52,7 +52,7 @@ I converted the app to Swift and to use the new Firebase backend. I also impleme
 
 ## Dune project
 
-This is a project I have been working on when I had time, mostly during weekends. It isn't yet on the Appstore, and I am unsure if I will ever publish it there. I am using this project to explore the newest thechnologies in frontend, backend and AWS.
+This is a project I have been working on when I had time, mostly during weekends. It isn't yet on the Appstore, and I am unsure if I will ever publish it there. I am using this project to explore the newest technologies in frontend, backend and AWS.
 The Dune iPhone/iPad MacOS app uses [SwiftUI](https://developer.apple.com/documentation/swiftui/), the new declarative framework Apple introduced during WWDC 2019.
 The backend is programmed with [Vapor framework](https://vapor.codes), and I have developed a CI/CD pipeline with [AWS Cloud Development Kit](https://aws.amazon.com/cdk/), containerized the app and running together with MongoDB on AWS ECS Fargate.
 I have made a [tutorial how to use CDK to make a CI/CD pipeline](/vapor/cdk-pipeline-part-1) and have deployed the Dune backend the same way in AWS.
