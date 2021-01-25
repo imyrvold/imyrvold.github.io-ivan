@@ -120,7 +120,7 @@ swift build --product NotificationServer -c release -Xswiftc -static-stdlib
 
 Fabian Fett gives a nice explanation in his excellent [blog post](https://fabianfett.de/getting-started-with-swift-aws-lambda-runtime) (Step 5) of all the parameters of this command.
 
-Make a new folder `Scripts`, and add the script `package.sh` to it:
+Make a new folder `scripts`, and add the script `package.sh` to it:
 
 ```
 #!/bin/bash
