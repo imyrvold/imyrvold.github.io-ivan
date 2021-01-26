@@ -6,7 +6,7 @@ tags: lambda, localstack, apigateway, aws, docker, swift
 ###### Published 2021-01-26
 # Using Amazon API Gateway (Rest API) with Swift Lambda - Part 1
 
-Amazon have now two different API Gateway services that can be used for connecting other AWS services, like Lambda, to HTTP endpoints. They are API Gateway (Rest API), and HTTP API. The API HTTP (apigatewayv2) is the newest service, and the easiest to configure, but the Rest API (apigateway) is the service with the most functionality but also the most complicated one. In this three-part blog posts we will focus on the Rest API.
+Amazon have two different API Gateway services that can be used for connecting other AWS services, like Lambda, to HTTP endpoints. They are API Gateway (Rest API), and HTTP API. The API HTTP (apigatewayv2) is the newest service, and the easiest to configure, but the Rest API (apigateway) is the service with the most functionality but also the most complicated one. In this three-part blog posts we will focus on the Rest API.
 
 We will go through three integrations with Lambda, this first post will show you how to use the API Gateway to integrate with a GET method with query parameters. This means that you will be able to use a normal web browser to connect to the Lambda service, and supply parameters through the browsers query parameters. The next two posts will show how to integrate with a POST method with a JSON payload to get the same result, and the third blog post will show how to integrate with a GET method with path parameters.
 
@@ -27,7 +27,7 @@ We will make the new Lambda function by first making a new folder and then use S
 We can open the project in Xcode by double-clicking the Package.swift file in Finder, or by doing `open Package.swift` in the Terminal.
 
 Add `AWSLambdaRuntime` to the `Package.swift` file:
-```
+```swift
 // swift-tools-version:5.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
@@ -56,7 +56,7 @@ let package = Package(
 
 Add the code for the simple calculator to `main.swift`:
 
-```
+```swift
 import AWSLambdaRuntime
 
 struct Input: Codable {
@@ -159,7 +159,7 @@ The `scripts/packagage.sh ${RESOURCE_NAME}` at the end of the script packs the s
 
 Add the `package.sh` shell script to the scripts folder:
 
-```
+```console
 #!/bin/bash
 
 set -eu
@@ -185,12 +185,12 @@ Another shell script `delete_aws.sh` is used to tear down the infrastructure in 
 
 The setup script stores the results of the scripts in the `results/aws` folder, so we have to make this folder first with `mkdir -p results/aws`
 
-I will explain the steps made in the setup script, but the complete project with swift code and the scripts can be cloned from my GitHub repository.
+I will explain the steps made in the setup script, but the complete project with swift code and the scripts can be cloned from my [GitHub repository](https://github.com/imyrvold/lambda_calc1).
 
 ## IAM role and policy
 We need to create an execution role for the Lambda function, and an iam policy to attach to the role.
 Make the json file with the policy with name `Invoke-Function-Role-Trust-Policy.json`:
-```
+```json
 {
    "Version":"2012-10-17",
    "Statement":[
@@ -204,7 +204,7 @@ Make the json file with the policy with name `Invoke-Function-Role-Trust-Policy.
 ```
 
 Add the command for creating the policy to `setup_aws.sh`:
-```
+```console
 echo "1 iam create-policy..."
 aws iam create-policy \
     --policy-name $POLICY_NAME \
@@ -218,7 +218,7 @@ POLICY_ARN=$(aws iam list-policies --query "Policies[?PolicyName==\`${POLICY_NAM
 We are storing the policy arn in `POLICY_ARN`, we need this when we will attach the policy to the role.
 
 Before we can create the role, we need another policy, `Assume-STS-Role-Policy.json` file:
-```
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -237,7 +237,7 @@ Before we can create the role, we need another policy, `Assume-STS-Role-Policy.j
 } 
 ```
 Now we can create the role:
-```
+```console
 echo "2 iam create-role..."
 aws iam create-role \
     --role-name $ROLE_NAME \
@@ -249,7 +249,7 @@ aws iam create-role \
 
 And we can attach the policy we created in step 1:
 
-```
+```console
 echo "3 iam attach-role-policy..."
 aws iam attach-role-policy \
     --role-name $ROLE_NAME \
@@ -263,9 +263,9 @@ ROLE_ARN=$(aws iam list-roles --query "Roles[?RoleName==\`${ROLE_NAME}\`].Arn" -
 `ROLE_ARN` keeps the Amazon Resource Name (ARN) value for the role we created. ARN is an identifier that unambigiously identifies a resource across all of AWS.
 
 ## Create Lambda function
-Before we create the function, we makes the shell script sleep for 10 seconds with the `sleep 10` before the `create-function`. This is because the `create-role` and `attach-role-policy` takes some time to be ready before it can be used in the `create-function` command. I had this command fail until I did this.
+Before we create the function, we makes the shell script sleep for 10 seconds with the `sleep 10` before the `create-function`. This is because the `create-role` and `attach-role-policy` takes some time to be ready before it can be used in the `create-function` command. The command failed until I did this.
 
-```
+```console
 sleep 10
 
 echo "4 lambda create-function..."
@@ -289,7 +289,7 @@ The `LAMBDA_ARN` keeps the arn of the Lambda function, to be used later. Notice 
 ## API Gateway commands
 The rest of the commands in this shell script are the API Gateway commands that are needed to create the REST API for the Lambda function.
 
-```
+```console
 echo "5 apigateway create-rest-api..."
 aws apigateway create-rest-api \
     --region ${REGION} \
@@ -306,7 +306,7 @@ This is the command for the creation of the API Gateway itself. `API_ID` is the 
 
 The first resource we create is the `calc` resource, which will be part of the path to the next resource:
 
-```
+```console
 echo "6 apigateway create-resource..."
 aws apigateway create-resource \
     --region ${REGION} \
@@ -322,7 +322,7 @@ RESOURCE_ID=$(aws apigateway get-resources --rest-api-id ${API_ID} --query "item
 We save the id of this resource in `RESOURCE_ID`. It is used in the `put-method` in step 8.
 We can make the API Gateway validate the request query parameters we supply in the URI of the request, so that we don't call the Lambda function with wrong parameters. We do that with the request validators we create in step 7.
 
-```
+```console
 echo "7 apigateway create-request-validator..."
 aws apigateway create-request-validator \
     --region ${REGION} \
@@ -340,7 +340,7 @@ Now we have reached the point where we will do the integrations. This blog post 
 
 ## Integration 1
 
-```
+```console
 #Integration 1
 # Resources /calc/GET
 
@@ -359,7 +359,7 @@ aws apigateway put-method \
 ```
 We see that we create the `GET` http-method, and we also validate the three querystring parameters `operand1`, `operand2` and `operator`. API Gateway will make an error if one of these parameters are missing, or have wrong names.
 
-```
+```console
 echo "9 apigateway put-method-response..."
 aws apigateway put-method-response \
     --region ${REGION} \
@@ -376,7 +376,7 @@ We return statuscode `200` if we don't have any errors in the Lambda code. In th
 
 Before the next step, we need to make a new JSON file for the request templates in the `put-integration` command. Make a new file with name `request-templates.json` with content:
 
-```
+```json
 {
   "application/json":"{\n    \"a\":  $input.params('operand1'),\n    \"b\":  $input.params('operand2'), \n    \"op\": \"$input.params('operator')\"   \n}"
 }
@@ -387,7 +387,7 @@ Now we can make the integration. Note that we use type `AWS` as the integration 
 
 Check out the [Choose an API Gateway API integration type](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-api-integration-types.html) for the different types we can use.
 
-```
+```console
 echo "10 apigateway put-integration..."
 aws apigateway put-integration \
     --region ${REGION} \
@@ -406,7 +406,7 @@ aws apigateway put-integration \
 ```
 
 We are at last come to the last command for this integration. That is the integration response. Make sure that the `response-templates` is set to `application/json` with a value of `null`, which is set with the empty quotes in the command. 
-```
+```console
 echo "11 apigateway put-integration-response..."
 aws apigateway put-integration-response \
     --region ${REGION} \
@@ -424,7 +424,7 @@ aws apigateway put-integration-response \
 
 We can now deploy the API Gateway :
 
-```
+```console
 echo "12 apigateway create-deployment..."
 aws apigateway create-deployment \
     --region ${REGION} \
@@ -436,7 +436,7 @@ aws apigateway create-deployment \
 ```
 
 Add the following to the end of the script, so that we at the end of execution of the script can output the endpoint and test it with a simple curl command:
-```
+```console
 ENDPOINT=https://${API_ID}.execute-api.eu-west-1.amazonaws.com/${STAGE}/calc
 echo "API available at: ${ENDPOINT}"
 
@@ -473,7 +473,7 @@ Now replace `operator2` with `operand2`, and we should get a correct result:
 
 To remove the Lambda function and the API Gateway, add this file to the scripts folder, with the name `delete_aws.sh`:
 
-```
+```console
 #!/bin/sh
 
 FUNCTION_NAME=Calc
