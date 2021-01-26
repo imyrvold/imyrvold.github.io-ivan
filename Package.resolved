@@ -2,15 +2,6 @@
   "object": {
     "pins": [
       {
-        "package": "BrianPublishTheme",
-        "repositoryURL": "https://github.com/dinsen/brianpublishtheme",
-        "state": {
-          "branch": null,
-          "revision": "03825d20c0d26e3638e65926c4ca6033e7df14fd",
-          "version": "0.1.0"
-        }
-      },
-      {
         "package": "Codextended",
         "repositoryURL": "https://github.com/johnsundell/codextended.git",
         "state": {
