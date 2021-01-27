@@ -8,7 +8,7 @@ tags: lambda, localstack, apigateway, aws, docker, swift
 
 Amazon have two different API Gateway services that can be used for connecting other AWS services, like Lambda, to HTTP endpoints. They are API Gateway (Rest API), and HTTP API. The API HTTP (apigatewayv2) is the newest service, and the easiest to configure, but the Rest API (apigateway) is the service with the most functionality but also the most complicated one. In this three-part blog posts we will focus on the Rest API.
 
-We will go through three integrations with Lambda, this first post will show you how to use the API Gateway to integrate with a GET method with query parameters. This means that you will be able to use a normal web browser to connect to the Lambda service, and supply parameters through the browsers query parameters. The next two posts will show how to integrate with a POST method with a JSON payload to get the same result, and the third blog post will show how to integrate with a GET method with path parameters.
+We will go through three integrations with Lambda, this first post will show you how to use the API Gateway to integrate with a GET method with query parameters. This means that you will be able to use a normal web browser to connect to the Lambda service, and supply parameters through the browsers query parameters. The next two posts will show how to [integrate with a POST method](/aws/apigatewayv1-with-swift-part-2) with a JSON payload to get the same result, and the third blog post will show how to integrate with a GET method with path parameters.
 
 The nice thing about this is that we don't have to modify the Swift Lambda code to integrate with these three different methods, all is done with using API Gateway and the supporting services.
 
@@ -302,6 +302,7 @@ aws apigateway create-rest-api \
 API_ID=$(aws apigateway get-rest-apis --query "items[?name==\`${API_NAME}\`].id" --output text --region ${REGION})
 PARENT_RESOURCE_ID=$(aws apigateway get-resources --rest-api-id ${API_ID} --query 'items[?path==`/`].id' --output text --region ${REGION})
 ```
+<a name="step6"></a>
 This is the command for the creation of the API Gateway itself. `API_ID` is the id of the REST API we have created, and is used in almost all of the rest of the commands. We also need to save the `PARENT_RESOURCE`, which is the root resource we need for creation of new resources for the REST API.
 
 The first resource we create is the `calc` resource, which will be part of the path to the next resource:
