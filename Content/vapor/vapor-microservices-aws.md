@@ -83,7 +83,7 @@ Use your own username and password here, the same as in the environment variable
 If everything worked out, you should now have received a statusCode 200, with a JSON body that contains `"status": "success"` and both accessToken and refreshToken.
 
 ## CDK Setup
-Using Cloud Development Kit (CDK) with the pipelines construct is a great way to setup a CI/CD pipeline for the microservice. Start by making a new folder directly under the `Shop` folder:
+Using Cloud Development Kit (CDK) with the pipelines construct is a great way to setup a CI/CD pipeline for the microservice. Start by making a new folder directly under the `UsersService` folder:
 `mkdir cdk && cd cdk`
 
 If you haven't installed Node.js, do that with `brew install node`.
