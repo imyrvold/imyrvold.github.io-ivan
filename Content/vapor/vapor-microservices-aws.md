@@ -324,7 +324,7 @@ const buildRole = new Role(this, 'DockerBuildRole', {
 repository.grantPullPush(buildRole)
 ```
 
-We creates a buildspec project that uses the buildRole, and adds the policies to the project to read from the Secrets manager.
+We create a buildspec project that uses the buildRole, and adds the policies to the project to read from the Secrets manager.
 
 ```
 const mongoSecret = new Secret(this, 'mongodb')
@@ -417,6 +417,8 @@ new CicdInfraStack(app, 'CicdUsersInfraStack', {
 
 app.synth()
 ```
+
+You are now finished with the source code, and can commit and push everything to your GitHub repo.
 
 ## Bootstrap AWS environments
 Before we can use CDK Pipelines, we must bootstrap the AWS environment. [AWS documentation](https://docs.aws.amazon.com/cdk/latest/guide/cdk_pipeline.html) have more information about the bootstrapping.
