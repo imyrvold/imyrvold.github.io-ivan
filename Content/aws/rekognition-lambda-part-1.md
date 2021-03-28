@@ -269,7 +269,7 @@ First, list all your S3 buckets with the command:
 
 One of the buckets should have a name beginning with `lambdadeploymentstage...`.
 Now, copy one photo from your hard drive to the S3 bucket, here is an example from my photo:
-`aws s3 cp ~/Pictures/IMG_3164.JPG s3://lambdadeploymentstage-de-cdkreknimagebucketa588dc-joztsb6kb272`
+`aws s3 cp ~/Pictures/IMG_2032.JPG s3://lambdadeploymentstage-de-cdkreknimagebucketa588dc-joztsb6kb272`
 
 Hopefully, that went ok, and you can make a scan from your DynamoDB database, to see if the Rekognition function in the Lambda function managed to see what is in the photo (we gave the table the name `ImageLabels` when we created the table with CDK):
 
