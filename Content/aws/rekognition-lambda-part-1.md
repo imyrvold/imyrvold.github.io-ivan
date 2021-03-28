@@ -332,4 +332,4 @@ This is the list of labels I get when running the Lambda function. The photo is 
 
 We have made a Lambda function with Swift and Soto, and verified it works by manually copying a photo to the S3 bucket, which triggers an S3 event to the Lambda function. The Lambda function uses the Rekognition function in AWS to generate a list of labels, which the Lambda function copies into a DynamoDB table together with the photo file name.
 
-In my next blog post in this serial, I will build on the foundation we made here.
+In my next blog post in this serial, I will build on the foundation we made here. 
