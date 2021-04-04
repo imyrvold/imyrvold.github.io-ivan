@@ -168,7 +168,15 @@ MagickWandGenesis()
 let wand = NewMagickWand()
 
 let status: MagickBooleanType = MagickReadImage(wand, "<photo file name>")
-MagickResizeImage(wand, 100, 100, LanczosFilter,1.0)
+if status == MagickFalse {
+    print("Error reading the image")
+} else {
+    let width = MagickGetImageWidth(wand)
+    let height = MagickGetImageHeight(wand)
+    let newHeight = 100
+    let newWidth = 100 * width / height
+    MagickResizeImage(wand, newWidth, newHeight, LanczosFilter,1.0)
+}
 MagickWriteImage(wand, "thumbnail.jpg")
 
 DestroyMagickWand(wand)
