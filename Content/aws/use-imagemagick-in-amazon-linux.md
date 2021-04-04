@@ -142,9 +142,12 @@ With Terminal.app, change directory to `sim`, where the `Dockerfile` is, and bui
 
 `docker build -t sim:latest .`
 
-And then run the image in the docker container with `bash`:
+If you run the docker container from the image interactively, with parameter --volume "$(pwd)/:/src", then you can edit the source in main.swift with Xcode, but compile it in the container itself:
 
-`docker run --rm -it sim bash`
+`docker run --rm \`
+`--volume "$(pwd)/:/src" \`
+`--workdir "/src/" \`
+`-it sim bash`
 
 You can now build the `ImageMagickTest` using Swift from the docker container:
 
@@ -154,7 +157,25 @@ You should now have a `build` folder, and can run the application from there:
 
 `.build/debug/ImageMagickTest`
 
-This should print out a `Hello, world!` in terminal, and you should also find a new file called `redsquare.jpg` if you do a `ls -al` in terminal.
+This should print out a `Hello, world!` in terminal, and you should also find a new file called `redsquare.jpg` in Finder in the folder `ImageMagickTest`
+
+If you place a photo in the `ImageMagickTest` folder, and modify `main.swift` to the following code, you will be able to resize the photo. Just replace the `<photo file name>` with the name of your photo:
+
+```
+import CImageMagick
+
+MagickWandGenesis()
+let wand = NewMagickWand()
+
+let status: MagickBooleanType = MagickReadImage(wand, "<photo file name>")
+MagickResizeImage(wand, 100, 100, LanczosFilter,1.0)
+MagickWriteImage(wand, "thumbnail.jpg")
+
+DestroyMagickWand(wand)
+MagickWandTerminus()
+```
+
+After a `swift build` and running the code with `.build/debug/ImageMagickTest`, you should find a thumbnail of your photo with name `thumbnail.jpg` in Finder folder `ImageMagickTest`.
 
 ## Conclusion
 
