@@ -1,10 +1,10 @@
 ---
 date: 2021-03-21 06:25
-description: Rekognition Lambda Function with Swift
+description: Rekognition Lambda Function with Swift Part 1
 tags: lambda, aws, docker, swift
 ---
 ###### Published 2021-03-21
-# Rekognition Lambda Function with Swift
+# Rekognition Lambda Function with Swift Part 1
 
 Twitch has a video stream called [AWS Dev Hour: Building Modern Applications](https://www.twitch.tv/aws/video/891956043), an 8-episode series which uses CDK, [Cloud Development Kit](https://aws.amazon.com/cdk/) to build an application with Python. The application uses [AWS Lambda](https://aws.amazon.com/lambda/) and [AWS Rekognition](https://aws.amazon.com/rekognition/?blog-cards.sort-by=item.additionalFields.createdDate&blog-cards.sort-order=desc) together to get information about images you upload to [AWS S3](https://aws.amazon.com/s3/).
 
