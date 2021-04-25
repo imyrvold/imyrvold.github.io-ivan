@@ -1,7 +1,7 @@
 ---
 date: 2021-04-24 09:34
 description: Rekognition Lambda Function with Swift Part 2
-tags: lambda, aws, docker, swift, restapi
+tags: lambda, aws, docker, swift
 ---
 ###### Published 2021-04-24
 # Rekognition Lambda Function with Swift Part 2
@@ -13,13 +13,15 @@ We will make the Lambda function in Swift, and call it `ServiceFunction`.
 
 We will also create a second S3 bucket, to keep a thumbnail of the image we upload. We create the thumbnail with the help of the ImageMagick library. But first I had to make a Swift package of the library, and [this blog post](/aws/use-imagemagick-in-amazon-linux) I made shows how to do this.
 
+Because we have two Swift Lambda functions, both with their own Swift Package Manager and Source folder, we have to make a new `lambda` folder which contains a folder for each of the two Lambda function sources, `rekfunction` and `servicefunction`.
+
 The full code base is available from my [GitHub account](https://github.com/imyrvold/DevhrProjectCICD), and I have a branch for each part of this series. The branch of this part is  `part2`.
 
 ![RekFunction](/images/lambda/rekfunction.png)
 
-## Swift Package Manager
+## Swift Package Manager - rekfunction
 
-Because we are using the ImageMagick library, we have to include it in as a dependency from my GitHub repository. For more information about the library, check out my [blog post](/aws/use-imagemagick-in-amazon-linux) about it.
+Because we are using the ImageMagick library, we have to include it as a dependency from my GitHub repository. For more information about the library, check out my [blog post](/aws/use-imagemagick-in-amazon-linux) about it. Add it to `lambda/rekfunction/Package.swift`.
 
 ```
 // swift-tools-version:5.3
@@ -400,4 +402,218 @@ func deleteImage(with key: String, context: Lambda.Context) -> EventLoopFuture<R
 }
 ```
 
+## CDK Infrastructure Code
 
+We are in a new branch `part2`, so we need to make sure that the CI/CD infrastructure code in CDK checks out the correct branch. This is in the `cdk/lib/devhr-project-cicd-infra.ts` file. This is the only change we have in this file. Replace `main` with `part2`:
+
+```
+import * as cdk from '@aws-cdk/core';
+import * as codepipeline from '@aws-cdk/aws-codepipeline';
+import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
+import * as ecr from '@aws-cdk/aws-ecr';
+import * as iam from '@aws-cdk/aws-iam';
+import * as pipelines from '@aws-cdk/pipelines';
+import { LambdaDeploymentStage } from './lambda-deployment';
+
+export class DevhrProjectCicdInfraStack extends cdk.Stack {
+    constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+        super(scope, id, props)
+
+        const sourceArtifact = new codepipeline.Artifact();
+        const cdkOutputArtifact = new codepipeline.Artifact();
+        
+        const pipeline = new pipelines.CdkPipeline(this, 'CdkPipeline', {
+            crossAccountKeys: false,
+            pipelineName: 'devhr-project-pipeline',
+            cloudAssemblyArtifact: cdkOutputArtifact,
+
+            sourceAction: new codepipeline_actions.GitHubSourceAction({
+                actionName: 'DownloadSources',
+                owner: 'imyrvold',
+                repo: 'DevhrProjectCICD',
+                branch: 'part2',
+```
+
+We have a new S3 bucket for the resized image, and a new Lambda function, so we have to add these to the `cdk/lib/devhr-project-stack.ts`. First, add the name of the new resized bucket:
+
+```
+import * as cdk from '@aws-cdk/core'
+import * as s3 from '@aws-cdk/aws-s3'
+import * as lambda from '@aws-cdk/aws-lambda'
+import * as dynamodb from '@aws-cdk/aws-dynamodb'
+import { Duration } from '@aws-cdk/core'
+import * as iam from '@aws-cdk/aws-iam'
+import * as event_sources from '@aws-cdk/aws-lambda-event-sources'
+
+const imageBucketName = 'cdk-rekn-imagebucket'
+const resizedBucketName = imageBucketName + "-resized"
+```
+Then, add the path to the dockerfile for the `rekfunction` and the `servicefunction`:
+
+```
+export class DevhrProjectStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props)
+
+    const dockerfile = '../lambda/rekfunction/';
+    const serviceDockerfile = '../lambda/servicefunction/';
+```
+
+After the code that defines the Image Bucket, add the Thumbnail Bucket:
+
+```
+// =================================================================================
+// Image Bucket
+// =================================================================================
+const imageBucket = new s3.Bucket(this, imageBucketName, {
+  removalPolicy: cdk.RemovalPolicy.DESTROY
+})
+new cdk.CfnOutput(this, 'imageBucket', { value: imageBucket.bucketName })
+
+// =================================================================================
+// Thumbnail Bucket
+// =================================================================================
+const resizedBucket = new s3.Bucket(this, resizedBucketName, {
+  removalPolicy: cdk.RemovalPolicy.DESTROY
+})
+new cdk.CfnOutput(this, 'resizedBucket', { value: resizedBucket.bucketName })
+```
+
+After the Amazon DynamoDB code, which is unchanged, we add the environment variable for the thumbbucket. We also increase the timeout to 30 seconds. The Lambda function needs more time to create the thumbnail:
+
+```
+// =================================================================================
+// Amazon DynamoDB table for storing image labels
+// =================================================================================
+const table = new dynamodb.Table(this, 'ImageLabels', {
+  tableName: 'ImageLabels',
+  partitionKey: { name: 'image', type: dynamodb.AttributeType.STRING },
+  removalPolicy: cdk.RemovalPolicy.DESTROY
+})
+new cdk.CfnOutput(this, 'ddbTable', { value: table.tableName })
+
+// =================================================================================
+// Building our AWS Lambda Function; compute for our serverless microservice
+// =================================================================================
+const rekFn = new lambda.DockerImageFunction(this, 'recognitionFunction', {
+  functionName: 'recognitionFunction',
+  code: lambda.DockerImageCode.fromImageAsset(dockerfile),
+  environment: {
+    'TABLE': table.tableName,
+    'BUCKET': imageBucket.bucketName,
+    'THUMBBUCKET': resizedBucket.bucketName
+  },
+  timeout: Duration.seconds(30)
+});
+```
+
+We also need to grant the permission to put the image to the thumbnail bucket for the Lambda function:
+
+```
+rekFn.addEventSource(new event_sources.S3EventSource(imageBucket, { events: [s3.EventType.OBJECT_CREATED] }))
+imageBucket.grantRead(rekFn)
+resizedBucket.grantPut(rekFn)
+resizedBucket.grantPutAcl(rekFn)
+table.grantWriteData(rekFn)
+
+rekFn.addToRolePolicy(new iam.PolicyStatement({
+  effect: iam.Effect.ALLOW,
+  actions: ['rekognition:DetectLabels'],
+  resources: ['*']
+}))
+```
+
+At last, we add the new Lambda function for the `serviceFunction`:
+
+```
+// =====================================================================================
+// Lambda for Synchronous Front End
+// =====================================================================================
+​  const serviceFn = new lambda.DockerImageFunction(this, 'serviceFunction', {
+  functionName: 'serviceFunction',
+  code: lambda.DockerImageCode.fromImageAsset(serviceDockerfile),
+  environment: {
+    'TABLE': table.tableName,
+    'BUCKET': imageBucket.bucketName,
+    'THUMBBUCKET': resizedBucket.bucketName
+  },
+  timeout: Duration.seconds(30)
+});
+
+imageBucket.grantWrite(serviceFn);
+resizedBucket.grantWrite(serviceFn);
+table.grantReadWriteData(serviceFn);
+}
+}
+```
+
+## Test Rekognition with Lambda
+
+With Terminal, we can now bootstrap the infrastructure code:
+
+`cdk bootstrap \`
+`--cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess \`
+`aws://<your AWS Account ID>/eu-west-1`  
+
+
+and deploy it: `cdk deploy`
+
+When the pipeline have built the Lambda function, we can test it with a photo.
+First, list all your S3 buckets with the command:
+`aws s3 ls`
+
+You should get the two lambda image buckets in the result. I got this back:
+
+`2021-04-25 09:13:31 lambdadeploymentstage-de-cdkreknimagebucketa588dc-1123ayav2rc42`
+`2021-04-25 09:11:48 lambdadeploymentstage-de-cdkreknimagebucketresize-12azqz1h8qxs5`
+
+in addition to the ci/cd s3 bucket.
+
+Copy a photo of your choice to the first image bucket (the one which doesn't have resize in it's name):
+
+`aws s3 cp ~/Pictures/IMG_3080.jpeg s3://lambdadeploymentstage-de-cdkreknimagebucketa588dc-1123ayav2rc42`
+
+Check that the image has been uploaded with:
+
+`aws s3 ls s3://lambdadeploymentstage-de-cdkreknimagebucketa588dc-1123ayav2rc42` 
+
+and check that the thumbnail has been created in the other S3 bucket:
+
+`aws s3 ls s3://lambdadeploymentstage-de-cdkreknimagebucketresize-12azqz1h8qxs5`.
+
+If you want, you could now copy the resized photo back to your disk, and open it in Preview to see that it is in fact resized:
+
+`aws s3 cp s3://lambdadeploymentstage-de-cdkreknimagebucketresize-12azqz1h8qxs5/IMG_3080.jpeg ~/Desktop/`
+
+`open -a Preview ~/Desktop/IMG_3080.jpeg`
+
+Also check that DynamoDB has got the labels for the photo:
+
+`aws dynamodb scan --table-name ImageLabels`
+
+## Test ServiceFunction Lambda
+
+To test the serviceFunction, open up the Lambda Function console with your browser, and select the `serviceFunction` link.
+Select the Test tab, and adjust the json to something like this. Use your own key for the photo name:
+
+![Test getLabels](/images/lambda/getLabels.png)
+
+The result should be something like this:
+
+![Test getLabels](/images/lambda/getLabelsResult.png)
+
+Now, set the action to `deleteImage`, and click the Test button again.
+You should again get a successful result, and to see that the images are really deleted from the S3 buckets, run the aws commands again:
+
+`aws s3 ls s3://lambdadeploymentstage-de-cdkreknimagebucketa588dc-1123ayav2rc42`
+`aws s3 ls s3://lambdadeploymentstage-de-cdkreknimagebucketresize-12azqz1h8qxs5`
+
+You should get empty result now. And do the same with the database:
+
+`aws dynamodb scan --table-name ImageLabels`
+
+This should also return empty.
+
+## Conclusion
+
+We have in this part introduced a new resized bucket and a new Lambda function, and tested that we can in fact resize an image that we have stored in an S3 bucket, and we can use the new Lambda function to get information about the stored photo, and also delete the image.
