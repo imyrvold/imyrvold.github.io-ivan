@@ -617,3 +617,5 @@ This should also return empty.
 ## Conclusion
 
 We have in this part introduced a new resized bucket and a new Lambda function, and tested that we can in fact resize an image that we have stored in an S3 bucket, and we can use the new Lambda function to get information about the stored photo, and also delete the image.
+
+In my [next blog post](/aws/rekognition-lambda-part-3) in this serial, I will show how to connect the AWS API Gateway (Rest API) to the Lambda serviceFunction.
