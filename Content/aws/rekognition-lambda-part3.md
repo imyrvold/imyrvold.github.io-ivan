@@ -8,6 +8,10 @@ tags: lambda, aws, docker, swift, apigateway
 
 In the two previous blog posts, [part1](aws/rekognition-lambda-part-1) and [part2](aws/rekognition-lambda-part-2) we created two Lambda functions with Swift.  In this episode I will show how to connect the Lambda function serviceFunction to the AWS API Gateway (Rest API). We will not do any changes to the Swift code, so the only changes will be in the CDK infrastructure code.
 
+The full code base is available from my [GitHub account](https://github.com/imyrvold/DevhrProjectCICD), and I have a branch for each part of this series. The branch of this part is  `part3`.
+
+![RekFunction](/images/lambda/rekfunction.png)
+
 ## Amazon API Gateway with AWS Lambda Integration
 
 Before we import the API Gateway into our CDK infrastructure code, we need to install the CDK construct:
