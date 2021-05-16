@@ -6,7 +6,7 @@ tags: lambda, aws, docker, swift, apigateway
 ###### Published 2021-04-25
 # Rekognition Lambda Function with Swift Part 3
 
-In the two previous blog posts, [part1](aws/rekognition-lambda-part-1) and [part2](aws/rekognition-lambda-part-2) we created two Lambda functions with Swift.  In this episode I will show how to connect the Lambda function serviceFunction to the AWS API Gateway (Rest API). We will not do any changes to the Swift code, so the only changes will be in the CDK infrastructure code.
+In the two previous blog posts, [part1](/aws/rekognition-lambda-part-1) and [part2](/aws/rekognition-lambda-part-2) we created two Lambda functions with Swift.  In this episode I will show how to connect the Lambda function serviceFunction to the AWS API Gateway (Rest API). We will not do any changes to the Swift code, so the only changes will be in the CDK infrastructure code.
 
 The full code base is available from my [GitHub account](https://github.com/imyrvold/DevhrProjectCICD), and I have a branch for each part of this series. The branch of this part is  `part3`.
 
