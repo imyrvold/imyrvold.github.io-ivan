@@ -8,7 +8,7 @@ tags: ios, swift, charts
 
 At last months WWDC Apple unveiled Swift Charts for SwiftUI, a new Swift library that enables a SwiftUI developer to make beautiful charts in the same declarative way that many of us have enjoyed with SwiftUI.
 
-<video width="320" height="240" controls>
+<video controls>
     <source src="/movies/Strømprisen-min.mov" type="video/mp4">
 </video>
 
