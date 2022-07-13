@@ -1,9 +1,12 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.5
 
 import PackageDescription
 
 let package = Package(
     name: "Ivan",
+    platforms: [
+        .macOS(.v12)
+    ],
     products: [
         .executable(
             name: "Ivan",
@@ -16,7 +19,7 @@ let package = Package(
         .package(name: "IvanPublishTheme", url: "https://github.com/imyrvold/IvanPublishTheme.git", from: "1.0.0")
     ],
     targets: [
-        .target(
+        .executableTarget(
             name: "Ivan",
             dependencies: ["Publish", "SplashPublishPlugin", "IvanPublishTheme"]
         )
