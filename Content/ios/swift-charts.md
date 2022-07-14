@@ -10,7 +10,7 @@ tags: ios, swift, charts
 
 At last months WWDC Apple unveiled Swift Charts for SwiftUI, a new Swift library that enables a SwiftUI developer to make beautiful charts in the same declarative way that many of us have enjoyed with SwiftUI. In the app that I have been the lead iOS developer for the last 1.5 years, we use many charts, and the library we have been using is also called `Charts` [Charts](https://github.com/danielgindi/Charts), and I have been impressed by the charts we have been able to produce with it.  
 
-The first thought I had when Apple showed the new Swift Charts library at WWDC, was if this could be a replacement for the Charts library we had been using? So for the last couple of days, I started my mission to see what I could do with one of the charts we have in the app. The result is at the short video at the end of this blog post, and as you can see, the result is quite impressive.
+The first thought I had when Apple showed the new Swift Charts library at WWDC, was if this could be a replacement for the Charts library we have been using? So for the last couple of days, I started my mission to see what I could do with one of the charts we have in the app. The result is at the short video at the end of this blog post, and as you can see, the result is quite impressive.
 
 ## Prepare the data ##
 
