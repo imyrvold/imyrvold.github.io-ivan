@@ -156,8 +156,186 @@ struct EnergyLinePriceView_Previews: PreviewProvider {
 }
 ```
 
-[First Chart](/images/ios/firstChart.png)
- 
+![First Chart](/images/ios/firstChart.png)
+
+## Move y-axis to the left ##
+In the chart in the original iOS app, we have the y-axis on the left. I found out after googling some blog posts that a view modifier to the chart could move it to the left:
+
+```swift
+Chart(energyPriceData.values, id: \.id) { data in
+    ...
+    ...
+}
+.chartYAxis {
+    AxisMarks(position: .leading)
+}
+```
+
+## Adding gestures to the chart ##
+In the original app, we could swipe over the chart to drag the marker line over the hours in the day, to get the electricity energy price for the hours, or tap on a specific hour to get the price for that hour. I wondered if it was possible to have the same feature withSwift Charts, I found a very good blog post [An adventure in Swift Charts](https://mobile.blog/2022/07/04/an-adventure-with-swift-charts/) which helped me understanding how to make gestures work.
+
+I found out that I had to add a `chartOverlay` modifier to `Chart`, which contains `GeometryReader` and a `Rectangle` with `gesture` modifier. That would be something like this:
+
+```swift
+Chart(energyPriceData.values, id: \.id) { data in
+    ...
+    ...
+}
+.chartOverlay { proxy in
+    GeometryReader { geometry in
+        Rectangle().fill(.clear).contentShape(Rectangle())
+            .gesture(DragGesture()
+                .onChanged { value in
+                    updateSelectedDate(at: value.location, proxy: proxy, geometry: geometry)
+                }
+            )
+            .onTapGesture { location in
+                updateSelectedDate(at: location, proxy: proxy, geometry: geometry)
+            }
+    }
+}
+```
+To combine everything together, the finished code for the view that makes the chart interactive with swipe and tap gestures, is the following code. The view is used in a presented view as in the video at the end:
+
+```swift
+struct EnergyLinePriceView: View {
+    let energyPriceData: EnergyPriceData
+    let blue = Color("newBrand/main/blue")
+    let pink = Color("newBrand/main/pink")
+    let secondaryGreyBlue = Color("newBrand/secondary/greyBlue")
+    @State private var selectedDate: Date?
+    @State private var selectedØre: Int?
+    let onIntervalSelected: (Int) -> Void
+
+    var now: Date {
+        let date = Calendar.current.date(bySetting: .minute, value: 0, of: Date()) ?? Date()
+        let newDate = Calendar.current.date(bySetting: .second, value: 0, of: date) ?? Date()
+        return Calendar.current.date(byAdding: .hour, value: -1, to: newDate) ?? Date()
+    }
+    var costNow: Int {
+        let price = energyPriceData.values.first(where: { now <= $0.hour })
+        return price?.øre ?? 0
+    }
+    
+    var body: some View {
+        Chart(energyPriceData.values, id: \.id) { data in
+            LineMark(x: .value("Hour", data.hour), y: .value("Øre", data.øre))
+                .foregroundStyle(blue)
+                .lineStyle(StrokeStyle(lineWidth: 6))
+            if let selectedDate = selectedDate {
+                RuleMark(x: .value("Selected date", selectedDate))
+                    .foregroundStyle(blue)
+                    .annotation(position: .automatic, alignment: .top) {
+                        VStack {
+                            Text(dateFromTo(with: selectedDate))
+                                .enigFont(style: .body1Emphasized)
+                            Text(ørePerkWh(with: selectedØre))
+                                .enigFont(style: .captionEmphasized)
+                        }
+                    }
+
+                PointMark(x: .value("Cost now", now), y: .value("Cost øre", costNow))
+                    .foregroundStyle(blue)
+                    .annotation(position: .overlay, alignment: .center) {
+                        Circle()
+                            .frame(width: 20, height: 20)
+                            .foregroundColor(blue)
+                    }
+                if let selectedØre = selectedØre {
+                    PointMark(x: .value("Selected date", selectedDate), y: .value("Selected øre", selectedØre))
+                        .foregroundStyle(blue)
+                        .annotation(position: .overlay, alignment: .center) {
+                            Circle()
+                                .frame(width: 20, height: 20)
+                                .foregroundColor(pink)
+                        }
+                }
+
+            } else {
+                RuleMark(x: .value("Now", now))
+                    .foregroundStyle(blue)
+                    .annotation(position: .automatic, alignment: .top) {
+                        VStack {
+                            Text(dateFromTo(with: now))
+                                .enigFont(style: .body1Emphasized)
+                            Text(ørePerkWh(with: costNow))
+                                .enigFont(style: .captionEmphasized)
+                        }
+                    }
+
+                PointMark(x: .value("Cost now", now), y: .value("Cost øre", costNow))
+                    .symbol(Circle())
+                    .annotation(position: .overlay, alignment: .center) {
+                        Circle()
+                            .frame(width: 20, height: 20)
+                            .foregroundColor(pink)
+                    }
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading)
+        }
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                Rectangle().fill(.clear).contentShape(Rectangle())
+                    .gesture(DragGesture()
+                        .onChanged { value in
+                            updateSelectedDate(at: value.location, proxy: proxy, geometry: geometry)
+                        }
+                    )
+                    .onTapGesture { location in
+                        updateSelectedDate(at: location, proxy: proxy, geometry: geometry)
+                    }
+            }
+        }
+
+        .chartYScale(domain: .automatic(includesZero: false))
+        .frame(height: 400)
+    }
+    
+    private func symbol(at location: CGPoint) -> ChartCircleShape {
+        ChartCircleShape(perceptualUnitRect: CGRect(x: location.x, y: location.y, width: 24, height: 24))
+    }
+    
+    private func updateSelectedDate(at location: CGPoint, proxy: ChartProxy, geometry: GeometryProxy) {
+        let xPosition = location.x - geometry[proxy.plotAreaFrame].origin.x
+        guard let date: Date = proxy.value(atX: xPosition) else {
+            return
+        }
+        selectedDate = energyPriceData.values
+            .sorted(by: {
+                abs($0.hour.timeIntervalSince(date)) < abs($1.hour.timeIntervalSince(date))
+            })
+            .first?.hour
+        selectedØre = energyPriceData.values.first(where: { $0.hour == selectedDate })?.øre
+        if let index = energyPriceData.values.firstIndex(where: { $0.hour == selectedDate }) {
+            onIntervalSelected(index)
+        }
+    }
+    
+    private func dateFromTo(with date: Date?) -> String {
+        guard let selectedDate = date, let toDate = Calendar.current.date(byAdding: .hour, value: 1, to: selectedDate) else { return "" }
+        let from = Formatter.hourMinute.string(from: selectedDate)
+        let to = Formatter.hourMinute.string(from: toDate)
+
+        return "\(from)-\(to)"
+    }
+    
+    private func ørePerkWh(with øre: Int?) -> LocalizedStringKey {
+        guard let selectedØre = øre else { return "" }
+        return LocalizedStringKey("\(selectedØre) øre per kWh")
+    }
+
+
+}
+
+struct EnergyLinePriceView_Previews: PreviewProvider {
+    static var previews: some View {
+        EnergyLinePriceView(energyPriceData: PreviewEnergyPrice.priceData.energyPriceData) { _ in }
+            .frame(width: 400)
+    }
+}
+```
 
 <video controls>
     <source src="/movies/Strømprisen-min.mov" type="video/mp4">
