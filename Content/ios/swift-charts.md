@@ -293,10 +293,6 @@ struct EnergyLinePriceView: View {
         .frame(height: 400)
     }
     
-    private func symbol(at location: CGPoint) -> ChartCircleShape {
-        ChartCircleShape(perceptualUnitRect: CGRect(x: location.x, y: location.y, width: 24, height: 24))
-    }
-    
     private func updateSelectedDate(at location: CGPoint, proxy: ChartProxy, geometry: GeometryProxy) {
         let xPosition = location.x - geometry[proxy.plotAreaFrame].origin.x
         guard let date: Date = proxy.value(atX: xPosition) else {
