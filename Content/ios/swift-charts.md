@@ -105,7 +105,7 @@ struct EnergyPriceData {
 
 ## First chart revision ##
 
-(My first try at the chart made the marker showing the blue vertical line with the red dot at the far right in the preview, but the simulator and device showed correctly. After some experimenting I found out that the preview have a bug in Xcode 14.0 beta 3 that results in the date having an offset of 24 hours, that is why the computed property `now` have the two different calculations depending on if I want to show it in the preview or simulator.)
+*(My first try at the chart made the marker showing the blue vertical line with the red dot at the far right in the preview, but the simulator and device showed correctly. After some experimenting I found out that the preview have a bug in Xcode 14.0 beta 3 that results in the date having an offset of 24 hours, that is why the computed property `now` have the two different calculations depending on if I want to show it in the preview or simulator.)*
 
 After some experimenting, I made the first line chart with the following code. Having used SwiftUI daily in the last two years, it felt very natural to code the chart declarative as the SwiftUI itself.
 
