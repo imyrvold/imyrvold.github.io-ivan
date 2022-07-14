@@ -103,7 +103,60 @@ struct EnergyPriceData {
 }
 ```
 
+## First chart revision ##
 
+(My first try at the chart made the marker showing the blue vertical line with the red dot at the far right in the preview, but the simulator and device showed correctly. After some experimenting I found out that the preview have a bug in Xcode 14.0 beta 3 that results in the date having an offset of 24 hours, that is why the computed property `now` have the two different calculations depending on if I want to show it in the preview or simulator.)
+
+After some experimenting, I made the first line chart with the following code. Having used SwiftUI daily in the last two years, it felt very natural to code the chart declarative as the SwiftUI itself.
+
+We start with the `Chart` itself, iterating over the `energyPriceData` values. For each data point we have a `LineMark`, which is the curve of the chart, and have view modifiers that sets the curve color to blue and thickness of the curve to 6.
+
+I added the `RuleMark`, which is the vertical light blue line that is at the X position for the current hour. It gets the current time from the `now` computed property.
+I have annotated the `RuleMark` with the `annotation` view modifier, which contains a simple SwiftUI view element `Circle` with the pink color.
+
+```swift
+import SwiftUI
+import Charts
+
+struct EnergyLinePriceView: View {
+    let energyPriceData: EnergyPriceData
+    let blue = Color("newBrand/main/blue")
+    let pink = Color("newBrand/main/pink")
+    
+    var now: Date {
+        // preview:
+        Calendar.current.date(byAdding: .hour, value: -24, to: Date()) ?? Date()
+        
+        // simulator and device:
+        // Date()
+    }
+    
+    var body: some View {
+        Chart(energyPriceData.values, id: \.id) { data in
+            LineMark(x: .value("Hour", data.hour), y: .value("Øre", data.øre))
+                .foregroundStyle(blue)
+                .lineStyle(StrokeStyle(lineWidth: 6))
+            RuleMark(x: .value("Now", now))
+                .annotation(position: .overlay) { context in
+                    Circle()
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(pink)
+                }
+        }
+        .chartYScale(domain: .automatic(includesZero: false))
+        .frame(height: 400)
+    }
+}
+
+struct EnergyLinePriceView_Previews: PreviewProvider {
+    static var previews: some View {
+        EnergyLinePriceView(energyPriceData: PreviewEnergyPrice.priceData.energyPriceData)
+            .frame(width: 400)
+    }
+}
+```
+
+[First Chart](/images/ios/firstChart.png)
  
 
 <video controls>
