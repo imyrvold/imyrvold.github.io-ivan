@@ -112,3 +112,8 @@ http://localhost:30002/api/users/login
 I have prepared a Swift package, that contains the models used in the Vapor project and also in the Vorian SwiftUI project I will showcase using the UsersService to register and login to. To be able to have a shared model package between backend and frontend makes it very easy to keep the models for frontend and backend in sync. The package can be accessed with the URL `https://github.com/shortcut/UserModelsPackage.git` and is a public repository.
 
 
+## Vorian SwiftUI app
+
+The Vorian app is a SwiftUI app that will show electricity prices, using public REST API's. If you register and login using the Vapor UsersService running in Kubernetes on your computer or on a public cloud service, you can use secure REST API to get more value out of the app. The app is only meant to be used as a demonstration app.
+
+More to follow...
