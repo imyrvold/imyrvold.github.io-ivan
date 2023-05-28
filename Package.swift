@@ -21,7 +21,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Ivan",
-            dependencies: ["Publish", "SplashPublishPlugin", "IvanPublishTheme"]
+            dependencies: ["Publish"/*, "SplashPublishPlugin", "IvanPublishTheme"*/]
         )
     ]
 )
