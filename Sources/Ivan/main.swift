@@ -31,6 +31,8 @@ struct Ivan: Website {
 // This will generate your website using the built-in Foundation theme:
 //try Ivan().publish(using: [.installPlugin(.highlightJS())])
 
-try Ivan().publish(withTheme: .tailwind)
+try Ivan().publish(
+    withTheme: .ivan,
+    plugins: [.splash(withClassPrefix: "")/*, .highlightJS()*/]
 )
  

@@ -37,6 +37,15 @@
       }
     },
     {
+      "identity" : "ivanpublishtheme",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/imyrvold/IvanPublishTheme.git",
+      "state" : {
+        "revision" : "2b26072099278d126ee4a8750860a22554700350",
+        "version" : "1.1.2"
+      }
+    },
+    {
       "identity" : "plot",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/johnsundell/plot.git",
@@ -61,6 +70,24 @@
       "state" : {
         "revision" : "e1577acf2b6e90086d01a6d5e2b8efdaae033568",
         "version" : "2.3.0"
+      }
+    },
+    {
+      "identity" : "splash",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnsundell/Splash.git",
+      "state" : {
+        "revision" : "7f4df436eb78fe64fe2c32c58006e9949fa28ad8",
+        "version" : "0.16.0"
+      }
+    },
+    {
+      "identity" : "splashpublishplugin",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/johnsundell/splashpublishplugin",
+      "state" : {
+        "revision" : "4fe79070f51e288bc8ba31934a3018cbe099d5f7",
+        "version" : "0.2.0"
       }
     },
     {
