@@ -1,18 +1,18 @@
 ---
 date: 2023-05-28 14:09
-description: Deploy UsersService Vapor app on Kubernetes
+description: Deploy Vapor app on Kubernetes
 tags: vapor, kubernetes, mongodb
 ---
 ###### Published 2023-05-28
-# Deploy UsersService Vapor app on Kubernetes
+# Deploy Vapor app on Kubernetes
 
 ## The project
 
-I have on previous blog posts described how to deploy Vapor microservices on AWS. In this blog post, I will show how to do the same on Kubernetes. I will not go into details on the Vapor project itself, as you can seein my previous blog post how to deal with Vapor, but concentrate on how to habdle the Kubernetes side to spin up the pods for the UsersService.
+I have on previous blog posts described how to deploy Vapor microservices on AWS. In this blog post, I will show how to do the same on Kubernetes. I will not go into details on the Vapor project itself, as you can see in my previous blog post how to deal with Vapor, but concentrate on how to handle the Kubernetes side to spin up the pods for the UsersService.
 
 I have the finished Vapor project in a private repository at https://github.com/shortcut/UserModelsPackage.git , so for those that have access to that repository can clone it directly.
 
-I have also a SwiftUI project Vorian that will use the Vapor backend to register and login to.
+I have also a SwiftUI project Vorian that will use the Vapor backend to register and login to. UsersService is just one of the microservices that I intend to use as a backend to Vorian, I will later on also add another microservice as another Kubernetes service.
 
 ## Kubernetes
 
