@@ -102,7 +102,7 @@ struct DailyElectricityPriceJob: ScheduledTask {
 ## UsersService
 
 The source code for this project is at [UsersService](https://github.com/shortcut/UsersService).
-I have a few years ago made a Vapor project to authenticate a user, returning JWT access token and refresh token to the user so that he can access protected API endpoints. I thought that this would be perfect for authenticating the Vorian SwiftUI app. As there have been a few years since developing this, I wanted to modernize the project, and replace the Fluent ORM I used at the time with MongoKitten and Meow ORM, which are dedicated frameworks for MongoDB (I think that Joannis Orlandos that is the developer and maintainer of these frameworks have a soft spot for cats 😄). This was a new framework that I haven't used before, so I had to have a few sessions with Joannis on his Discord server to make progress. I also used these frameworks for PriceJob and ContentService too.
+I have a few years ago made a Vapor project to authenticate a user, returning JWT access token and refresh token to the user so that he can access protected API endpoints. I thought that this would be perfect for authenticating the Vorian SwiftUI app. As there have been a few years since developing this, I wanted to modernize the project, and replace the Fluent ORM I used at the time with [MongoKitten](https://github.com/orlandos-nl/MongoKitten) and Meow ORM, which are dedicated frameworks for MongoDB (I think that Joannis Orlandos that is the developer and maintainer of these frameworks have a soft spot for cats 😄). This was a new framework that I haven't used before, so I had to have a few sessions with Joannis on his Discord server to make progress. I also used these frameworks for PriceJob and ContentService too.
 
 I used the same procedure as for the PriceJob service, to use Cloud Build to build the docker container every time there is a push to the GitHub repository, and save it to my personal Docker Hub. Unfortunately, I couldn't use a complete CI/CD for this with Cloud Build, but I hope that this will be possible in the future. Now only the Continuous Integration part of it is working, and I have to go to Cloud Run to push a button to make a new revision of the service after it has been built. If I had developed the docker container with one of the Google supported languages, that would have worked. But that is a minor annoyance. Cloud Build takes around 12-14 minutes to complete the build of the docker container.
 
@@ -194,4 +194,11 @@ final class AuthController: RouteCollection {
     }
 }
 ```
+
+## ContentService
+
+Source at [ContentService](https://github.com/shortcut/ContentService).
+The ContentService project is also based on Vapor, and using Meow as the MongoDB ORM. The idea behind ContentService is to be a micro service for only the content of the SwiftUI Vorian app. As the UsersService backend takes care of login, registering, and refreshing access tokens, the ContentService is returning the electricity price content, the home screen content and any other content that the app will use in the future. It shares the models with the SwiftUI Vorian app using the SPM UserModelsPackage package.
+
+The big advantage using the JSON Web Token (JWT) is that the backend server doesn't need to save the tokens, it only have to validate the access tokens that the user sends in the header. The JWKS public private keypair is added to the container in Cloud Run as an environment variable from Googles Secret Manager at run time, and is used to verify the tokens the user is sending in the http Authorization header. This is done automatically by Vapor with the verify function in the Payload struct.
 
