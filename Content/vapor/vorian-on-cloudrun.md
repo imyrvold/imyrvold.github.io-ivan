@@ -202,6 +202,8 @@ The ContentService project is also based on Vapor, and using Meow as the MongoDB
 
 The big advantage using the JSON Web Token (JWT) is that the backend server doesn't need to save the tokens, it only have to validate the access tokens that the user sends in the header. The JWKS public private keypair is added to the container in Cloud Run as an environment variable from Googles Secret Manager at run time, and is used to verify the tokens the user is sending in the http Authorization header. This is done automatically by Vapor with the verify function in the Payload struct.
 
+![Cloudrun services](/images/vapor/cloudrun-services.png)
+
 ```swift
 import Vapor
 import Meow
