@@ -20,6 +20,10 @@ I am happy to say that now all the services are running on Google Cloud, the Vor
 
 The database I use for the backend is MongoDB Atlas, which I have used for a few years. I love using a NoSQL database, and have used MongoDB for a few projects. The first project I used it for was a backend server I built 5 years ago for a company in Kristiansand using Node.js
 
+## UserModelsPackage
+
+The big advantage for developing both the frontend and the backend using the same language, is that we can share code between the platforms. I have used this with the Swift Package UserModelsPackage. Source is at [UserModelsPackage](https://github.com/shortcut/UserModelsPackage). In UserModelsPackage, I have Swift models that is shared between the Vorian SwiftUI app, and the backend micro services.
+
 ## PriceJob
 
 I wanted first to make a service that runs every day at 14:00, when the electricity prices for the next day is available, and save them to a MongoDB database. I investigated several solutions, first as running the job as a Vapor job, but then I found out that Google has a server-less service called Cloud Run, that could run a docker container as a job at intervals I could set.
@@ -97,6 +101,7 @@ struct DailyElectricityPriceJob: ScheduledTask {
 
 ## UsersService
 
+The source code for this project is at [UsersService](https://github.com/shortcut/UsersService).
 I have a few years ago made a Vapor project to authenticate a user, returning JWT access token and refresh token to the user so that he can access protected API endpoints. I thought that this would be perfect for authenticating the Vorian SwiftUI app. As there have been a few years since developing this, I wanted to modernize the project, and replace the Fluent ORM I used at the time with MongoKitten and Meow ORM, which are dedicated frameworks for MongoDB (I think that Joannis Orlandos that is the developer and maintainer of these frameworks have a soft spot for cats 😄). This was a new framework that I haven't used before, so I had to have a few sessions with Joannis on his Discord server to make progress. I also used these frameworks for PriceJob and ContentService too.
 
 I used the same procedure as for the PriceJob service, to use Cloud Build to build the docker container every time there is a push to the GitHub repository, and save it to my personal Docker Hub. Unfortunately, I couldn't use a complete CI/CD for this with Cloud Build, but I hope that this will be possible in the future. Now only the Continuous Integration part of it is working, and I have to go to Cloud Run to push a button to make a new revision of the service after it has been built. If I had developed the docker container with one of the Google supported languages, that would have worked. But that is a minor annoyance. Cloud Build takes around 12-14 minutes to complete the build of the docker container.
