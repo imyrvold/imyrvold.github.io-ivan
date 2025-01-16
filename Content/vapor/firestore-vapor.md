@@ -17,30 +17,30 @@ I wanted to make a reusable Swift package for the JWT signing of the Firestore, 
 ## Setting up Firebase
 
 You need to create a new project in Firebase, or use an existing on that you want to connect to. I decided to call my project duved-1955.
-![duved-1955](../../Resources/images/vapor/duved-1955.png)
+![duved-1955](/images/vapor/duved-1955.png)
 
 Click on **Firestore Database** in the sidebar, and then click the **Create database** button to create the Cloud Firestore.
-![create-cloud-firestore](../../Resources/images/vapor/create-cloud-firestore.png)
+![create-cloud-firestore](/images/vapor/create-cloud-firestore.png)
 After setting the location of your database, You will see an empty project.
-![empty-project](../../Resources/images/vapor/empty-project.png)
+![empty-project](/images/vapor/empty-project.png)
 
 Click project settings. This will open up the project settings window.
-![project-settings](../../Resources/images/vapor/project-settings.png)
+![project-settings](/images/vapor/project-settings.png)
 
 Click the **Service accounts** tab, and then **Generate new private key** button.
-![generate-private-key](../../Resources/images/vapor/generate-private-key.png)
+![generate-private-key](/images/vapor/generate-private-key.png)
 
 This will download a json file to your download folder. Open the json file with your favorite text editor, and find the private key value.
 
-![duved_json](../../Resources/images/vapor/duved_json.png)
+![duved_json](/images/vapor/duved_json.png)
 
  Copy that text into a new window. If you inspect the file, you will see that there are a number of "\n" in the file. Use a find and replace tool in your text editor, and replace them with an newline (If you use BBEdit, use "\\\n" in the Find field, and "\n" in the Replace field).
 
-![google-private-key](../../Resources/images/vapor/duved_replaced.png)
+![google-private-key](/images/vapor/duved_replaced.png)
 
 I named the file GooglePrivateKey.key
 
-![google-private-key](../../Resources/images/vapor/google_private_key.png)
+![google-private-key](/images/vapor/google_private_key.png)
 
 
 Vapor expects to have the private key base64-encoded, so we will do that with this command:
@@ -50,7 +50,7 @@ Make a new .env file, and add a `DUVED_PEM` environment variable with the conten
 Also add an environment variable for `SERVICE_ACCOUNT`,  `KID` and `DOCUMENTS_URL`. The `SERVICE_ACCOUNT` you can find in the downloaded json file, with the key `client_email`.
 `KID` is the first part of the domain in the service account email address, and `DOCUMENTS_URL` should be like shown below, with the `KID` inserted in the middle of the URL:
 
-![env-base64](../../Resources/images/vapor/duved_env.png)
+![env-base64](/images/vapor/duved_env.png)
 
 
 ## Setting up Vapor Swift Package
