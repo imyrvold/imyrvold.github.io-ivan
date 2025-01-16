@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:imyrvold.github.io-ivan}",
+            "name": "Debug Ivan",
+            "program": "${workspaceFolder:imyrvold.github.io-ivan}/.build/debug/Ivan",
+            "preLaunchTask": "swift: Build Debug Ivan"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:imyrvold.github.io-ivan}",
+            "name": "Release Ivan",
+            "program": "${workspaceFolder:imyrvold.github.io-ivan}/.build/release/Ivan",
+            "preLaunchTask": "swift: Build Release Ivan"
+        }
+    ]
+}
