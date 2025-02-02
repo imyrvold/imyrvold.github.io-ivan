@@ -402,3 +402,143 @@ Now run the project, and run the following cli command, but replace the token fo
 Xcode's console should now have printed both the email and userID.
 
 ## Add Todo controller and FirestoreService
+Add a new folder under App, and name it `Services`. Add a Swift file named `FirestoreService` to the folder. The content of the `FirestoreService` is this:
+
+```swift
+import Foundation
+import AsyncHTTPClient
+import Hummingbird
+import Logging
+
+actor FirestoreService {
+    private var token: TokenResult
+    private let logger: Logger
+    private let httpClient = HTTPClient.shared
+    var dateFormatter: DateFormatter {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        return dateFormatter
+    }
+    var decoder: JSONDecoder {
+        let decoder = JSONDecoder()
+        
+        decoder.dateDecodingStrategy = .formatted(dateFormatter)
+        return decoder
+    }
+    
+    init(logger: Logger) async {
+        self.logger = logger
+        self.token = TokenResult(accessToken: "", expiresIn: 0, tokenType: .bearer)
+        do {
+            self.token = try await JWTToken.fetchToken()
+        } catch {
+            logger.error("FirestoreService initialization failed getting token")
+        }
+    }
+    
+    func checkToken() async throws {
+        guard let expireTime = token.expireTime else {
+            throw HTTPError(.unauthorized, message: "FirestoreService failed exaniming expireTime")
+        }
+        if expireTime < Date.now {
+            token = try await JWTToken.fetchToken()
+        }
+    }
+}
+```
+
+FirestoreService will create a new `TokenResult`, and store it in the private var `token`. This token will be used in the `Authorization` header of API requests to Firestore.
+
+Make another Swift file under the `Services` folder, with the name `JWTToken`. It contains static methods to create JWT tokens used by `FirestoreService`.
+
+```swift
+import Foundation
+import JWTKit
+import AsyncHTTPClient
+import Hummingbird
+import Logging
+
+struct JWTToken {
+    static func jwtKeyCollection() async throws -> JWTKeyCollection {
+        let env = try await Environment.dotEnv()
+        guard let pem = env.get("FIREBASE_PRIVATE_KEY")/*, let kid = env.get("FIREBASE_KID")*/ else {
+            throw HTTPError(.unauthorized, message: "Failed getting environment variables")
+        }
+        
+        let keys = JWTKeyCollection()
+        let privateKey = try pem.base64Decoded()
+
+        let key = try Insecure.RSA.PrivateKey(pem: privateKey)
+        await keys.add(rsa: key, digestAlgorithm: .sha256)
+
+        return keys
+    }
+    
+    static func createJWT() async throws -> String {
+        let env = try await Environment.dotEnv()
+        guard let serviceAccount = env.get("FIREBASE_SERVICE_ACCOUNT"), let audience = env.get("TOKEN_URL"), let scope = env.get("FIREBASE_SCOPE"), let pem = env.get("FIREBASE_PRIVATE_KEY"), let kid = env.get("FIREBASE_KID") else {
+            throw HTTPError(.unauthorized, message: "JWTToken initialization failed")
+        }
+        guard let time = Calendar.current.date(byAdding: .minute, value: 30, to: Date.now) else { throw HTTPError(.unauthorized, message: "JWTToken initialization failed") }
+        let payload = FirestorePayload(expiration: .init(value: time), issuedAt: .init(value: .now), issuer: .init(value: serviceAccount), audience: .init(value: [audience]), scope: scope)
+        
+        let keys = JWTKeyCollection()
+        let privateKey = try pem.base64Decoded()
+
+        let key = try Insecure.RSA.PrivateKey(pem: privateKey)
+        let jwkIdentifier = JWKIdentifier(string: kid)
+        await keys.add(rsa: key, digestAlgorithm: .sha256, kid: jwkIdentifier)
+        let jwtHeaderField = JWTHeaderField(stringLiteral: kid)
+        return try await keys.sign(payload, header: ["kid": jwtHeaderField])
+    }
+        
+    static func fetchToken() async throws -> TokenResult {
+        let jwt = try await createJWT()
+        let env = try await Environment.dotEnv()
+        guard let jwksUrl = env.get("JWKS_URL") else { throw HTTPError(.unauthorized, message: "JWTToken initialization failed") }
+
+        let client = HTTPClient.shared
+        var request = HTTPClientRequest(url: jwksUrl)
+        request.method = .POST
+        request.headers = .init([("Content-Type", "application/x-www-form-urlencoded")])
+        request.body = .bytes(.init(string: "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=\(jwt)"))
+        let response = try await client.execute(request, timeout: .seconds(5))
+        let responseBody = try await response.body.collect(upTo: 1_000_000)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        var result = try decoder.decode(TokenResult.self, from: responseBody)
+        result.expireTime = Calendar.current.date(byAdding: .second, value: result.expiresIn, to: Date.now)
+        return result
+    }
+}
+```
+
+At last, make a `Models` folder under `App`, with the `TokenResult` model that `JWTToken` will create:
+
+```swift
+import Foundation
+
+enum TokenType: String, Decodable {
+    case bearer = "Bearer"
+}
+
+struct TokenResult: Decodable {
+    let accessToken: String
+    let expiresIn: Int
+    let tokenType: TokenType
+    var expireTime: Date?
+    
+    enum CodingKeys: String, CodingKey {
+        case accessToken
+        case expiresIn
+        case tokenType
+    }
+}
+
+extension TokenResult {
+    static var empty: TokenResult {
+        .init(accessToken: "", expiresIn: 0, tokenType: .bearer)
+    }
+}
+```
+
