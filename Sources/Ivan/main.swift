@@ -14,6 +14,7 @@ struct Ivan: Website {
         case aws
         case ios
         case life
+        case hummingbird
     }
 
     struct ItemMetadata: WebsiteItemMetadata {
