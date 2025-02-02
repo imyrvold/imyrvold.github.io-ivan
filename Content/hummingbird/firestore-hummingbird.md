@@ -224,4 +224,58 @@ public struct FirebaseJWTPayload: JWTPayload {
 }
 ```
 
+We need to create a User file, that `JWTAuthenticator` returns as part of the authenticate process. Add a Models folder under App, and add a User.swift file, that should look like this:
+
+```swift
+import HummingbirdBcrypt
+import Foundation
+import Hummingbird
+import HummingbirdAuth
+import HummingbirdBasicAuth
+import NIOPosix
+
+final class User: PasswordAuthenticatable, @unchecked Sendable {
+    var userID: String
+    var email: String?
+    var passwordHash: String?
+
+    init(userID: String, email: String?, passwordHash: String? = nil) {
+        self.userID = userID
+        self.email = email
+        self.passwordHash = passwordHash
+    }
+
+    init(from userRequest: CreateUserRequest) async throws {
+        self.userID = userRequest.userID
+        self.email = userRequest.email
+    }
+}
+
+struct CreateUserRequest: Decodable {
+    let userID: String
+    let email: String
+
+    init(userID: String, email: String) {
+        self.userID = userID
+        self.email = email
+    }
+}
+
+/// User encoded into HTTP response
+struct UserResponse: ResponseCodable {
+    let userID: String
+    let email: String?
+
+    init(userID: String, email: String?) {
+        self.userID = userID
+        self.email = email
+    }
+
+    init(from user: User) {
+        self.userID = user.userID
+        self.email = user.email
+    }
+}
+```
+
 
