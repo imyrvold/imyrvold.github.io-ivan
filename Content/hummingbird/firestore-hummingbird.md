@@ -449,7 +449,7 @@ actor FirestoreService {
 
 FirestoreService will create a new `TokenResult`, and store it in the private var `token`. This token will be used in the `Authorization` header of API requests to Firestore.
 
-Make another Swift file under the `Services` folder, with the name `JWTToken`. It contains static methods to create JWT tokens used by `FirestoreService`.
+Make another Swift file under the `Services` folder, with the name `JWTToken`. It contains static methods to create JWT needed used by `FirestoreService`.
 
 ```swift
 import Foundation
@@ -459,21 +459,6 @@ import Hummingbird
 import Logging
 
 struct JWTToken {
-    static func jwtKeyCollection() async throws -> JWTKeyCollection {
-        let env = try await Environment.dotEnv()
-        guard let pem = env.get("FIREBASE_PRIVATE_KEY")/*, let kid = env.get("FIREBASE_KID")*/ else {
-            throw HTTPError(.unauthorized, message: "Failed getting environment variables")
-        }
-        
-        let keys = JWTKeyCollection()
-        let privateKey = try pem.base64Decoded()
-
-        let key = try Insecure.RSA.PrivateKey(pem: privateKey)
-        await keys.add(rsa: key, digestAlgorithm: .sha256)
-
-        return keys
-    }
-    
     static func createJWT() async throws -> String {
         let env = try await Environment.dotEnv()
         guard let serviceAccount = env.get("FIREBASE_SERVICE_ACCOUNT"), let audience = env.get("TOKEN_URL"), let scope = env.get("FIREBASE_SCOPE"), let pem = env.get("FIREBASE_PRIVATE_KEY"), let kid = env.get("FIREBASE_KID") else {
@@ -495,10 +480,9 @@ struct JWTToken {
     static func fetchToken() async throws -> TokenResult {
         let jwt = try await createJWT()
         let env = try await Environment.dotEnv()
-        guard let jwksUrl = env.get("JWKS_URL") else { throw HTTPError(.unauthorized, message: "JWTToken initialization failed") }
-
+        guard let tokenUrl = env.get("TOKEN_URL") else { throw HTTPError(.unauthorized, message: "JWTToken initialization failed") }
         let client = HTTPClient.shared
-        var request = HTTPClientRequest(url: jwksUrl)
+        var request = HTTPClientRequest(url: tokenUrl)
         request.method = .POST
         request.headers = .init([("Content-Type", "application/x-www-form-urlencoded")])
         request.body = .bytes(.init(string: "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=\(jwt)"))
@@ -506,6 +490,9 @@ struct JWTToken {
         let responseBody = try await response.body.collect(upTo: 1_000_000)
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
+        let json = String(decoding: try JSONSerialization.data(withJSONObject: JSONSerialization.jsonObject(with: responseBody), options: [.prettyPrinted]), as: UTF8.self)
+        print(json)
+
         var result = try decoder.decode(TokenResult.self, from: responseBody)
         result.expireTime = Calendar.current.date(byAdding: .second, value: result.expiresIn, to: Date.now)
         return result
@@ -541,4 +528,5 @@ extension TokenResult {
     }
 }
 ```
+
 
