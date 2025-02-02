@@ -4,15 +4,13 @@ description: Using Hummingbird as Firestore API Server
 tags: hummingbird, swift
 ---
 ###### Published 2025-02-02
-# Make Using Hummingbird as Firestore API Server
+# Using Hummingbird as Firestore API Server
 
 ## The project
 
 I have successfully used Firestore as a database from Vapor, and decided I wanted to try out Hummingbird using the same method. I write the blog post mostly for my own sake to document every step in the process before I forget it. But I am happy if anyone else finds this blog post and find it useful.
 
 When I first researched the internet with the help of Google to find if anyone else have done something similar, I came across the post [Getting Started with Firebase for Server-Side Swift](https://medium.com/atlas/getting-started-with-firebase-for-server-side-swift-93c11098702a) by Tyler Milner. The JWT and Vapor part of the post was outdated, as he used Vapor 2 and an older version of jwt-kit. But I got a lot of useful information out of this post, and wanted to use Hummingbird and jwt-kit to get the same result. And as Swift 6 is released now, I also wanted to use this even if it meant to having to grapple with Sendable protocol.
-
-I wanted to make a reusable Swift package for the JWT signing of the Firestore, and release that as a public package for anyone that want to make a Vapor project connecting to Firestore much easier. I decided to name the package DuvedJWT.
 
 ## Setting up Firebase
 
@@ -43,13 +41,26 @@ I named the file GooglePrivateKey.key
 ![google-private-key](/images/vapor/google_private_key.png)
 
 
-Vapor expects to have the private key base64-encoded, so we will do that with this command:
+Hummingbird expects to have the private key base64-encoded, so we will do that with this command:
 `base64 -i GooglePrivateKey.key -o GooglePrivateKeyBase64.key`
 
-Make a new .env file, and add a `DUVED_PEM` environment variable with the content of the base64 file we just created. 
-Also add an environment variable for `SERVICE_ACCOUNT`,  `KID` and `DOCUMENTS_URL`. The `SERVICE_ACCOUNT` you can find in the downloaded json file, with the key `client_email`.
-`KID` is the first part of the domain in the service account email address, and `DOCUMENTS_URL` should be like shown below, with the `KID` inserted in the middle of the URL:
+Make a new .env file, and add a `FIREBASE_PRIVATE_KEY` environment variable with the content of the base64 file we just created. 
+Also add an environment variable for `FIREBASE_SERVICE_ACCOUNT`,  `FIREBASE_KID` and `DOCUMENTS_URL`. The `SERVICE_ACCOUNT` you can find in the downloaded json file, with the key `client_email`.
+`FIREBASE_KID` is the first part of the domain in the service account email address, and `DOCUMENTS_URL` should be like shown below, with the `KID` inserted in the middle of the URL:
 
-![env-base64](/images/vapor/duved_env.png)
+![env-base64](/images/hummingbird/duved_env.png)
 
 ## Setting up Hummingbird Swift Package
+Make a new Hummingbird project with the following commands (I called my project duhum):
+
+> git clone https://github.com/hummingbird-project/template duhum
+
+> cd duhum
+
+When running configure.sh, just accept the defaults by pressing return
+
+> ./configure.sh
+
+Now you can open the project from Xcode or Visual Studio if you prefer.
+
+
