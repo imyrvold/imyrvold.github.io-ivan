@@ -41,7 +41,7 @@ I named the file GooglePrivateKey.key
 ![google-private-key](/images/vapor/google_private_key.png)
 
 
-Hummingbird expects to have the private key base64-encoded, so we will do that with this command:
+Our project expects to have the private key base64-encoded, so we will do that with this command:
 `base64 -i GooglePrivateKey.key -o GooglePrivateKeyBase64.key`
 
 Make a new .env file, and add a `FIREBASE_PRIVATE_KEY` environment variable with the content of the base64 file we just created. 
@@ -224,7 +224,7 @@ public struct FirebaseJWTPayload: JWTPayload {
 }
 ```
 
-We need to create a User file, that `JWTAuthenticator` returns as part of the authenticate process. Add a Models folder under App, and add a User.swift file, that should look like this:
+We need to create a User file, that `JWTAuthenticator` returns as part of the authentication process. Add a Models folder under App, and add a User.swift file, that should look like this:
 
 ```swift
 import HummingbirdBcrypt
@@ -277,5 +277,114 @@ struct UserResponse: ResponseCodable {
     }
 }
 ```
+
+Finally, we need to edit the `Application+build` file, to set up the authentication and controllers.
+
+```swift
+import Hummingbird
+import Logging
+import AsyncHTTPClient
+import HummingbirdAuth
+import JWTKit
+import ServiceLifecycle
+import Foundation
+
+public protocol AppArguments {
+    var hostname: String { get }
+    var port: Int { get }
+    var logLevel: Logger.Level? { get }
+}
+
+typealias AppRequestContext = BasicAuthRequestContext<User>
+
+///  Build application
+/// - Parameter arguments: application arguments
+public func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
+    let environment = Environment()
+    let logger = {
+        var logger = Logger(label: "fishum")
+        logger.logLevel =
+            arguments.logLevel ??
+            environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ??
+            .info
+        return logger
+    }()
+    let jwtAuthenticator: JWTAuthenticator
+    let env = try await Environment.dotEnv()
+
+    guard let jwksUrl = env.get("JWKS_URL") else {
+        logger.error("JWTAuthenticator initialization failed getting environment vars")
+        throw HTTPError(.unauthorized, message: "JWTAuthenticator initialization failed")
+    }
+    let httpClient = HTTPClient.shared
+
+    do {
+        let request = HTTPClientRequest(url: jwksUrl)
+        let jwksResponse: HTTPClientResponse = try await httpClient.execute(request, timeout: .seconds(20))
+        let jwksData = try await jwksResponse.body.collect(upTo: 1_000_000)
+        jwtAuthenticator = try await JWTAuthenticator(jwksData: jwksData)
+    } catch {
+        logger.error("JWTAuthenticator initialization failed")
+        throw error
+    }
+
+    let router = Router(context: AppRequestContext.self)
+    router.add(middleware: LogRequestsMiddleware(.debug))
+  
+//    let firestoreService = await FirestoreService(logger: logger)
+  
+//  TodoController(jwtAuthenticator: jwtAuthenticator, firestoreService: firestoreService)
+//    .addRoutes(to: router.group("api/todo"))
+
+    router.group("auth")
+        .add(middleware: jwtAuthenticator)
+        .get("/") { request, context in
+            guard let user = context.identity else { throw HTTPError(.unauthorized) }
+            return "Authenticated (Subject: \(user.email ?? "unknown"))"
+        }
+
+
+    let app = Application(
+        router: router,
+        configuration: .init(
+            address: .hostname(arguments.hostname, port: arguments.port),
+            serverName: "fishum"
+        ),
+        logger: logger
+    )
+    return app
+}
+```
+
+Now is the time to build the project. It should build, if it doesn't go through the code and see if you have missed something in the process. We will uncomment the commented lines in the `Application+build` in the next sections.
+
+## Add Todo controller and FirestoreService
+
+When we get an API request, we need to authenticate it and see that we have the request coming from a user that have logged in with a Firebase auth process. That could be via web, or from a mobile app. I am mostly familiar doing this from a mobile app, so that is how I will set it up. We will not need to build a mobile app, but only set this up in Firebase, so we can log in with `curl`.
+
+When the request have been authenticated with the JWTAuthenticator middleware, we need to create a Bearer token so we can send a request to Firestore API with this token embedded in the Authorization header. Doing it this way we can request data from a Firestore collection or set or update data in the Firestore collection. We can even send push notifications with this. I have built an API in Vapor doing this, and now with Hummingbird we can do it with this project.
+
+First we need to find the Web API Key. Go to Project settins in Firebase, the General tab, and find the web api key there, as like this:
+
+![env-base64](/images/hummingbird/web_api_key.png)
+
+We also need to create a login user, so we can test the login:
+
+![env-base64](/images/hummingbird/login_user.png)
+
+Now, use this api key in the following curl cli command, to see if we can get a secure token from Firebase.
+
+```
+curl -i --request POST \
+--header "Content-Type: application/json" \
+--data-binary '{"email": "donald@duck.no", "password": "donald", "returnSecureToken": true}' \
+https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSy...
+```
+
+This should result in a HTTP 200 response like the following:
+
+![env-base64](/images/hummingbird/login_response.png)
+
+This proves that we can get an secure token, and we can use that to test our projects authentication process.
 
 
