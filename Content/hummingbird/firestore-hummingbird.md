@@ -358,7 +358,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
 
 Now is the time to build the project. It should build, if it doesn't go through the code and see if you have missed something in the process. We will uncomment the commented lines in the `Application+build` in the next sections.
 
-## Add Todo controller and FirestoreService
+## Login to our project
 
 When we get an API request, we need to authenticate it and see that we have the request coming from a user that have logged in with a Firebase auth process. That could be via web, or from a mobile app. I am mostly familiar doing this from a mobile app, so that is how I will set it up. We will not need to build a mobile app, but only set this up in Firebase, so we can log in with `curl`.
 
@@ -387,4 +387,18 @@ This should result in a HTTP 200 response like the following:
 
 This proves that we can get an secure token, and we can use that to test our projects authentication process.
 
+In the file `Application+build`, after the `router.group("auth")` just below the `guard statement`, add the following print statement to see that we get the user email and userID correctly and that the JWTAuthenticator have fully authorized the login user:
 
+`print("user:", user.email ?? "unknown", "id:", user.userID)`
+
+But before we run the project, make sure to set the custom working directory correctly if you are using Xcode, or else we will get an error thet the project have not read the environment variables. Select `Edit schemas` from the top of the Xcode window, and set the custom working directory to the directory where you have your project. Mine is like this:
+
+![env-base64](/images/hummingbird/custom_working_directory.png)
+
+Now run the project, and run the following cli command, but replace the token following the Bearer with the token we received from the login cli command above.
+
+![env-base64](/images/hummingbird/curl_auth.png)
+
+Xcode's console should now have printed both the email and userID.
+
+## Add Todo controller and FirestoreService
