@@ -50,17 +50,62 @@ Also add an environment variable for `FIREBASE_SERVICE_ACCOUNT`,  `FIREBASE_KID`
 
 ![env-base64](/images/hummingbird/duved_env.png)
 
-## Setting up Hummingbird Swift Package
+## Setting up Hummingbird
 Make a new Hummingbird project with the following commands (I called my project duhum):
 
-> git clone https://github.com/hummingbird-project/template duhum
+`git clone https://github.com/hummingbird-project/template duhum`
 
-> cd duhum
+`cd duhum`
 
 When running configure.sh, just accept the defaults by pressing return
 
-> ./configure.sh
+`./configure.sh`
 
 Now you can open the project from Xcode or Visual Studio if you prefer.
+
+Open `Package.swift`, and add the dependencies so that it looks like this:
+
+```swift
+// swift-tools-version:6.0
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
+import PackageDescription
+
+let package = Package(
+    name: "duhum",
+    platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17)],
+    products: [
+        .executable(name: "App", targets: ["App"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0"),
+        .package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0"),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.19.0"),
+    ],
+    targets: [
+        .executableTarget(name: "App",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdBcrypt", package: "hummingbird-auth"),
+                .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
+                .product(name: "HummingbirdBasicAuth", package: "hummingbird-auth"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "JWTKit", package: "jwt-kit"),
+            ],
+            path: "Sources/App"
+        ),
+        .testTarget(name: "AppTests",
+            dependencies: [
+                .byName(name: "App"),
+                .product(name: "HummingbirdTesting", package: "hummingbird")
+            ],
+            path: "Tests/AppTests"
+        )
+    ]
+)
+```
 
 
