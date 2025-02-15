@@ -14,7 +14,7 @@ When I first researched the internet with the help of Google to find if anyone e
 
 ## Setting up Firebase
 
-You need to create a new project in Firebase, or use an existing on that you want to connect to. I decided to call my project duved-1955.
+You need to create a new project in Firebase, or use an existing one that you want to connect to. I decided to call my project duved-1955.
 ![duved-1955](/images/vapor/duved-1955.png)
 
 Click on **Firestore Database** in the sidebar, and then click the **Create database** button to create the Cloud Firestore.
@@ -32,7 +32,7 @@ This will download a json file to your download folder. Open the json file with 
 
 ![duved_json](/images/vapor/duved_json.png)
 
- Copy that text into a new window. If you inspect the file, you will see that there are a number of "\n" in the file. Use a find and replace tool in your text editor, and replace them with an newline (If you use BBEdit, use "\\\n" in the Find field, and "\n" in the Replace field).
+ Copy that text into a new window. If you inspect the file, you will see that there are a number of `\n` in the file. Use a find and replace tool in your text editor, and replace them with an newline (If you use BBEdit, use `\\n` in the Find field, and `\n` in the Replace field).
 
 ![google-private-key](/images/vapor/duved_replaced.png)
 
@@ -62,6 +62,7 @@ When running configure.sh, just accept the defaults by pressing return
 `./configure.sh`
 
 Now you can open the project from Xcode or Visual Studio if you prefer.
+You should also move the .env file we created above to the root of the project.
 
 Open `Package.swift`, and add the dependencies so that it looks like this:
 
@@ -356,7 +357,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
 }
 ```
 
-Now is the time to build the project. It should build, if it doesn't go through the code and see if you have missed something in the process. We will uncomment the commented lines in the `Application+build` in the next sections.
+Now is the time to build the project. It should build, but if it doesn't go through the code and see if you have missed something in the process. We will uncomment the commented lines in the `Application+build` in the next sections.
 
 ## Login to our project
 
@@ -428,7 +429,7 @@ actor FirestoreService {
     
     init(logger: Logger) async {
         self.logger = logger
-        self.token = TokenResult(accessToken: "", expiresIn: 0, tokenType: .bearer)
+        self.token = TokenResult.empty
         do {
             self.token = try await JWTToken.fetchToken()
         } catch {
@@ -438,7 +439,7 @@ actor FirestoreService {
     
     func checkToken() async throws {
         guard let expireTime = token.expireTime else {
-            throw HTTPError(.unauthorized, message: "FirestoreService failed exaniming expireTime")
+            throw HTTPError(.unauthorized, message: "FirestoreService failed examining expireTime")
         }
         if expireTime < Date.now {
             token = try await JWTToken.fetchToken()
