@@ -403,6 +403,9 @@ Now run the project, and run the following cli command, but replace the token fo
 Xcode's console should now have printed both the email and userID.
 
 ## Add Todo controller and FirestoreService
+In this section we are at last going to explore how we can get data from a Firestore collection. We will start by making a `Todo` API route controller that will route the API calls that arrives to the correct route method, 
+and a `FirestoreService` that will help us quering Firestore collection for data that the `Todo` controller needs.
+
 Add a new folder under App, and name it `Services`. Add a Swift file named `FirestoreService` to the folder. The content of the `FirestoreService` is this:
 
 ```swift
@@ -530,4 +533,56 @@ extension TokenResult {
 }
 ```
 
+Now we will be building the `TodoController` with some very simple routes. Add a folder under `App` with the name `Controllers`, and add a Swift file in the folder named `TodoController`.
+The content of the folder is this:
+
+```swift
+import Foundation
+import Hummingbird
+import HummingbirdAuth
+import HummingbirdBasicAuth
+import JWTKit
+import NIO
+
+struct TodoController {
+    let jwtAuthenticator: JWTAuthenticator
+    let firestoreService: FirestoreService
+
+    func addRoutes(to group: RouterGroup<AppRequestContext>) {
+      group
+        .add(middleware: jwtAuthenticator)
+        .get(":todoId", use: todo)
+    }
+
+    @Sendable func todo(_ request: Request, context: AppRequestContext) async throws -> Response {
+        guard let _ = context.identity else { return .init(status: .unauthorized) }
+        let todoId = try context.parameters.require("todoId", as: String.self)
+        
+        print("TodoController", #function, "todoId:", todoId)
+        return .init(status: .ok)
+    }
+}
+```
+
+Then go back to the `Application+build` file and uncomment the following lines:
+
+```swift
+    let router = Router(context: AppRequestContext.self)
+    router.add(middleware: LogRequestsMiddleware(.debug))
+```
+
+Now we can try out the new route. Fetch a new token from Firebase by logging in with the user we created previously with the curl command I used previously.
+
+Then try the following command (with your own token):
+
+```
+curl -i --request GET \
+--header "Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjhkMjUwZDIyYTkzODVmYzQ4NDJhYTU2YWJhZjUzZmU5NDcxNmVjNTQiLCJ0eXAiOiJKV1QifQ......." \
+--header "Content-Type: application/json" \
+http://localhost:8080/api/todo/123456
+```
+
+You should have received a HTTPResponse 200, and the Xcode console should have printed out the todoId we sent (123456).
+
+## Communicate with Firestore
 
