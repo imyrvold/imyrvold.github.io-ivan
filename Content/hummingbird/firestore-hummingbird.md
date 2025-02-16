@@ -101,9 +101,13 @@ let package = Package(
     ],
     targets: [
         .executableTarget(name: "App", dependencies: [
-            .product(name: "Hummingbird", package: "hummingbird"),
-            .product(name: "JWTKit", package: "jwt-kit"),
-            .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdBcrypt", package: "hummingbird-auth"),
+                .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
+                .product(name: "HummingbirdBasicAuth", package: "hummingbird-auth"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client"),
+                .product(name: "JWTKit", package: "jwt-kit"),
         ]),
     ]
 )
