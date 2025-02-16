@@ -587,4 +587,77 @@ http://localhost:8080/api/todo/123456
 You should have received a HTTPResponse 200, and the Xcode console should have printed out the todoId we sent (123456).
 
 ## Communicate with Firestore
+We now have all the pieces ready to start fetching real data from Firestore. But we need to create a collection first, and some data in the collection.
+Head back to the collection, and press `+ start collection`. Give the collection the name `todo`.
+
+![env-base64](/images/hummingbird/firebase_new_collection.png)
+
+Press `Auto-ID` to make a new ID for the first document:
+
+![env-base64](/images/hummingbird/firebase_new_document.png)
+
+Add some new fields to the collection document:
+
+![env-base64](/images/hummingbird/firebase_new_fields.png)
+
+We need to make a model of the new collection in Hummingbird. Add a new folder under `App` named `Collections`, and add a document named `TodoCollection.swift`.
+Firestore uses `StringValue` for strings in Fields, and `BooleanValue` for Bool.
+
+```swift
+import Foundation
+
+struct TodoCollection: Codable {
+    let nextPageToken: String?
+    let documents: [TodoDocument]
+}
+extension TodoCollection {
+    struct TodoDocument: Codable {
+        let fields: TodoFields
+        let createTime: Date
+        let name: String
+        let updateTime: Date
+    }
+}
+
+struct TodoFields: Codable {
+    let title: StringValue
+    let completed: BooleanValue
+}
+
+struct StringValue: Codable {
+    let stringValue: String
+}
+
+struct BooleanValue: Codable {
+    let booleanValue: Bool
+}
+```
+
+We also need to make a model of `Todo` that the REST API will return to the client requesting the data. Make a new `Todo.swift` file under the `Models` folder:
+
+```swift
+import Foundation
+import Hummingbird
+
+struct Todo {
+    let title: String
+    let completed: Bool
+}
+extension Todo: ResponseEncodable, Decodable, Equatable {}
+```
+
+Modify the `todo(_:context:)` method in the `TodoController` to the following:
+
+```swift
+    @Sendable func todo(_ request: Request, context: AppRequestContext) async throws -> Todo {
+        guard let _ = context.identity else { throw HTTPError(.unauthorized) }
+        let todoId = try context.parameters.require("todoId", as: String.self)
+        let todo = try await firestoreService.fetchTodoData(with: todoId)
+        
+        return todo
+    }
+```
+
+Add a new method `fetchTodoData(with:)` to `FirestoreService`:
+
 
