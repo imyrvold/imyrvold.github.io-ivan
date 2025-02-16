@@ -115,9 +115,9 @@ let package = Package(
 
 ---
 
-## Middleware
+# 3. Middleware
 
-Add a Middleware folder under the App folder, and add a Swift file named `JWTAuthenticator`. This is the middleware that we will use to authenticate the api requests from clients that have been authenticated by Firebase. That could be an iOS or Android app that uses Firebase.
+Add a `Middleware` folder under the `App` folder, and create a Swift file named `JWTAuthenticator.swift`. This is the middleware that will authenticate API requests from clients that have been authenticated by **Firebase**. These clients could be **iOS or Android apps** that use Firebase authentication.
 
 The file should look like this:
 
@@ -145,7 +145,6 @@ struct FirestorePayload: JWTPayload, Equatable {
     func verify(using algorithm: some JWTKit.JWTAlgorithm) async throws {
         try self.expiration.verifyNotExpired()
     }
-    
 }
 
 struct JWTAuthenticator: AuthenticatorMiddleware, @unchecked Sendable {
@@ -169,13 +168,12 @@ struct JWTAuthenticator: AuthenticatorMiddleware, @unchecked Sendable {
                 throw HTTPError(.unauthorized)
             }
         } catch {
-            context.logger.debug("couldn't verify token")
+            context.logger.debug("Couldn't verify token")
             throw HTTPError(.unauthorized)
         }
 
         return User(userID: payload.userID, email: payload.email)
     }
-    
 }
 
 public struct FirebaseJWTPayload: JWTPayload {
@@ -188,7 +186,7 @@ public struct FirebaseJWTPayload: JWTPayload {
         }
         try expirationAt.verifyNotExpired()
     }
-    
+
     enum CodingKeys: String, CodingKey {
         case issuer = "iss"
         case subject = "sub"
@@ -203,25 +201,25 @@ public struct FirebaseJWTPayload: JWTPayload {
         case isEmailVerified = "email_verified"
         case phoneNumber = "phone_number"
     }
-    
-    /// Issuer. It must be "https://securetoken.google.com/<projectId>", where <projectId> is the same project ID used for aud
+
+    /// Issuer: Must be `"https://securetoken.google.com/<projectId>"`, where `<projectId>` matches the `aud` claim.
     public let issuer: IssuerClaim
-    
-    /// Issued-at time. It must be in the past. The time is measured in seconds since the UNIX epoch.
+
+    /// Issued-at time: Must be in the past.
     public let issuedAt: IssuedAtClaim
-    
-    /// Expiration time. It must be in the future. The time is measured in seconds since the UNIX epoch.
+
+    /// Expiration time: Must be in the future.
     public let expirationAt: ExpirationClaim
-    
-    /// The audience that this ID token is intended for. It must be your Firebase project ID, the unique identifier for your Firebase project, which can be found in the URL of that project's console.
+
+    /// Audience: Must match the Firebase project ID.
     public let audience: AudienceClaim
-    
-    /// Subject. It must be a non-empty string and must be the uid of the user or device.
+
+    /// Subject: Must be a non-empty string and match the user ID.
     public let subject: SubjectClaim
-    
-    /// Authentication time. It must be in the past. The time when the user authenticated.
+
+    /// Authentication time: Must be in the past.
     public let authTime: Date?
-    
+
     public let userID: String
     public let email: String?
     public let picture: String?
@@ -231,7 +229,13 @@ public struct FirebaseJWTPayload: JWTPayload {
 }
 ```
 
-We need to create a User file, that `JWTAuthenticator` returns as part of the authentication process. Add a Models folder under App, and add a User.swift file, that should look like this:
+---
+
+# 4. User Model
+
+We need to create a `User.swift` file that `JWTAuthenticator` will return as part of the authentication process.
+
+Create a **Models** folder under `App`, and add `User.swift`:
 
 ```swift
 import HummingbirdBcrypt
@@ -285,87 +289,9 @@ struct UserResponse: ResponseCodable {
 }
 ```
 
-Finally, we need to edit the `Application+build` file, to set up the authentication and controllers.
+---
 
-```swift
-import Hummingbird
-import Logging
-import AsyncHTTPClient
-import HummingbirdAuth
-import JWTKit
-import ServiceLifecycle
-import Foundation
-
-public protocol AppArguments {
-    var hostname: String { get }
-    var port: Int { get }
-    var logLevel: Logger.Level? { get }
-}
-
-typealias AppRequestContext = BasicAuthRequestContext<User>
-
-///  Build application
-/// - Parameter arguments: application arguments
-public func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
-    let environment = Environment()
-    let logger = {
-        var logger = Logger(label: "fishum")
-        logger.logLevel =
-            arguments.logLevel ??
-            environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ??
-            .info
-        return logger
-    }()
-    let jwtAuthenticator: JWTAuthenticator
-    let env = try await Environment.dotEnv()
-
-    guard let jwksUrl = env.get("JWKS_URL") else {
-        logger.error("JWTAuthenticator initialization failed getting environment vars")
-        throw HTTPError(.unauthorized, message: "JWTAuthenticator initialization failed")
-    }
-    let httpClient = HTTPClient.shared
-
-    do {
-        let request = HTTPClientRequest(url: jwksUrl)
-        let jwksResponse: HTTPClientResponse = try await httpClient.execute(request, timeout: .seconds(20))
-        let jwksData = try await jwksResponse.body.collect(upTo: 1_000_000)
-        jwtAuthenticator = try await JWTAuthenticator(jwksData: jwksData)
-    } catch {
-        logger.error("JWTAuthenticator initialization failed")
-        throw error
-    }
-
-    let router = Router(context: AppRequestContext.self)
-    router.add(middleware: LogRequestsMiddleware(.debug))
-  
-//    let firestoreService = await FirestoreService(logger: logger)
-  
-//  TodoController(jwtAuthenticator: jwtAuthenticator, firestoreService: firestoreService)
-//    .addRoutes(to: router.group("api/todo"))
-
-    router.group("auth")
-        .add(middleware: jwtAuthenticator)
-        .get("/") { request, context in
-            guard let user = context.identity else { throw HTTPError(.unauthorized) }
-            return "Authenticated (Subject: \(user.email ?? "unknown"))"
-        }
-
-
-    let app = Application(
-        router: router,
-        configuration: .init(
-            address: .hostname(arguments.hostname, port: arguments.port),
-            serverName: "fishum"
-        ),
-        logger: logger
-    )
-    return app
-}
-```
-
-Now is the time to build the project. It should build, but if it doesn't go through the code and see if you have missed something in the process. We will uncomment the commented lines in the `Application+build` in the next sections.
-
-## Login to our project
+# 5. Login to our project
 
 When we get an API request, we need to authenticate it and see that we have the request coming from a user that have logged in with a Firebase auth process. That could be via web, or from a mobile app. I am mostly familiar doing this from a mobile app, so that is how I will set it up. We will not need to build a mobile app, but only set this up in Firebase, so we can log in with `curl`.
 
@@ -408,7 +334,7 @@ Now run the project, and run the following cli command, but replace the token fo
 
 Xcode's console should now have printed both the email and userID.
 
-## Add Todo controller and FirestoreService
+# 6. Add Todo controller and FirestoreService
 In this section we are at last going to explore how we can get data from a Firestore collection. We will start by making a `Todo` API route controller that will route the API calls that arrives to the correct route method, 
 and a `FirestoreService` that will help us quering Firestore collection for data that the `Todo` controller needs.
 
@@ -592,7 +518,7 @@ http://localhost:8080/api/todo/123456
 
 You should have received a HTTPResponse 200, and the Xcode console should have printed out the todoId we sent (123456).
 
-## Communicate with Firestore
+# 7. Communicate with Firestore
 We now have all the pieces ready to start fetching real data from Firestore. But we need to create a collection first, and some data in the collection.
 Head back to the collection, and press `+ start collection`. Give the collection the name `todo`.
 
