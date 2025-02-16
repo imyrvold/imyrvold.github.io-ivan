@@ -623,6 +623,11 @@ struct TodoFields: Codable {
     let title: StringValue
     let completed: BooleanValue
 }
+extension TodoFields {
+    var toTodo: Todo {
+        .init(title: title.stringValue, completed: completed.booleanValue)
+    }
+}
 
 struct StringValue: Codable {
     let stringValue: String
@@ -646,6 +651,79 @@ struct Todo {
 extension Todo: ResponseEncodable, Decodable, Equatable {}
 ```
 
+Make a new folder under `App` named `Network` where we will collect all the network side of the app. Add three files, `Endpoint`, `Configuration` and `FirestoreError`.
+I am used to define the endpoint we want to hit the `Firestore` collection with an enum type named `Endpoint`.
+
+```swift
+import Foundation
+
+enum Endpoint {
+    case todo(documentId: String)
+    case todos
+    
+    var url: URL {
+        let baseUrl = Configuration.shared.baseURL
+        switch self {
+        case .todo(documentId: let documentId):
+            return baseUrl.appendingPathComponent("/todo/\(documentId)")
+        case .todos:
+            return baseUrl.appendingPathComponent("/todos")
+        }
+    }
+}
+```
+
+and `Configuration`:
+
+```swift
+import Foundation
+
+actor Configuration {
+    static private(set) var shared: Configuration!
+    
+    let baseURL: URL
+    
+    private init(baseURL: URL) {
+        self.baseURL = baseURL
+    }
+    
+    static func initialize(with baseURL: URL) {
+        guard shared == nil else {
+            fatalError("Configuration.shared has already been initialized!")
+        }
+        shared = Configuration(baseURL: baseURL)
+    }
+}
+```
+
+and `FirestoreError`:
+
+```swift
+import Foundation
+import Hummingbird
+
+struct FirestoreError: Decodable {
+    let error: ErrorResponse
+    
+    struct ErrorResponse: Decodable {
+        let code: Int
+        let message: String
+        let status: String
+    }
+}
+```
+
+In the file `Application+build`, add the following just before we set the `firestoreService`:
+
+```swift
+    guard let documentsUrlString = env.get("DOCUMENTS_URL"), let url = URL(string: documentsUrlString) else {
+      logger.error("JWTAuthenticator initialization failed getting environment vars")
+      throw HTTPError(.unauthorized, message: "JWTAuthenticator initialization failed getting environment vars")
+    }
+    Configuration.initialize(with: url)
+```
+
+
 Modify the `todo(_:context:)` method in the `TodoController` to the following:
 
 ```swift
@@ -658,6 +736,43 @@ Modify the `todo(_:context:)` method in the `TodoController` to the following:
     }
 ```
 
-Add a new method `fetchTodoData(with:)` to `FirestoreService`:
+Add the method `fetchTodoData(with:)` to `FirestoreService` and a generic `fetchDocument` method:
 
+```swift
+    func fetchTodoData(with id: String) async throws -> Todo {
+        try await checkToken()
+        let endPoint: Endpoint = .todo(documentId: id)
+        let todoDocument: TodoCollection.TodoDocument = try await fetchDocument(from: endPoint)
+
+        return todoDocument.fields.toTodo
+    }
+
+    func fetchDocument<T: Decodable>(from endPoint: Endpoint) async throws -> T {
+        try await checkToken()
+        let url = endPoint.url
+        var request = HTTPClientRequest(url: url.absoluteString)
+        request.method = .GET
+        request.headers = .init([("Content-Type", "application/json"), ("Authorization", "Bearer \(token.accessToken)")])
+        let data: ByteBuffer
+        let response: HTTPClientResponse = try await httpClient.execute(request, timeout: .seconds(20))
+        data = try await response.body.collect(upTo: 1_000_000)
+        if let error = try? decoder.decode(FirestoreError.self, from: data) {
+            throw HTTPError(.init(code: error.error.code), message: error.error.message)
+        }
+
+        let document: T
+        do {
+            document = try decoder.decode(T.self, from: data)
+        } catch {
+            throw HTTPError(.internalServerError, message: "Failed to decode JSON")
+        }
+        return document
+    }
+```
+
+Now you can build and run the project, and send it the following curl command:
+
+![env-base64](/images/hummingbird/firebase_todo_response.png)
+
+You will see that Firestore will return http 200 with the data that you entered into the collection document with the document id you provided.
 
