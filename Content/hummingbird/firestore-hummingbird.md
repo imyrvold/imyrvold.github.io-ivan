@@ -471,8 +471,12 @@ struct JWTToken {
         guard let time = Calendar.current.date(byAdding: .minute, value: 30, to: Date.now) else { throw HTTPError(.unauthorized, message: "JWTToken initialization failed") }
         let payload = FirestorePayload(expiration: .init(value: time), issuedAt: .init(value: .now), issuer: .init(value: serviceAccount), audience: .init(value: [audience]), scope: scope)
         
-        let keys = JWTKeyCollection()
-        let privateKey = try pem.base64Decoded()
+        let privateKey: String
+            if let decodedData = Data(base64Encoded: pem), let pkey = String(data: decodedData, encoding: .utf8) {
+            privateKey = pkey
+        } else {
+            throw HTTPError(.unauthorized, message: "JWTToken failed to decode private key")
+        }
 
         let key = try Insecure.RSA.PrivateKey(pem: privateKey)
         let jwkIdentifier = JWKIdentifier(string: kid)
@@ -494,8 +498,6 @@ struct JWTToken {
         let responseBody = try await response.body.collect(upTo: 1_000_000)
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        let json = String(decoding: try JSONSerialization.data(withJSONObject: JSONSerialization.jsonObject(with: responseBody), options: [.prettyPrinted]), as: UTF8.self)
-        print(json)
 
         var result = try decoder.decode(TokenResult.self, from: responseBody)
         result.expireTime = Calendar.current.date(byAdding: .second, value: result.expiresIn, to: Date.now)
