@@ -708,3 +708,13 @@ Now you can build and run the project, and send it the following curl command:
 
 You will see that Firestore will return http 200 with the data that you entered into the collection document with the document id you provided.
 
+---
+
+## Conclusion
+
+This project demonstrates how to integrate **Firebase Firestore** with **Hummingbird**, leveraging **JWT authentication** for secure API access. Using Hummingbird offers a lightweight and efficient alternative to **Vapor**, particularly for Swift 6 projects.
+
+For further improvements:
+- Implement **CRUD operations** for Firestore collections
+- Optimize token handling and caching
+- Add **unit tests** to validate API responses
