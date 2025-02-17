@@ -540,7 +540,7 @@ import Foundation
 
 struct TodoCollection: Codable {
     let nextPageToken: String?
-    let documents: [TodoDocument]
+    let documents: [Document<TodoFields>]
 }
 extension TodoCollection {
     struct TodoDocument: Codable {
@@ -567,6 +567,13 @@ struct StringValue: Codable {
 
 struct BooleanValue: Codable {
     let booleanValue: Bool
+}
+
+struct Document<T: Codable>: Codable {
+    let fields: T
+    let createTime: Date
+    let name: String
+    let updateTime: Date
 }
 ```
 
@@ -674,7 +681,7 @@ Add the method `fetchTodoData(with:)` to `FirestoreService` and a generic `fetch
     func fetchTodoData(with id: String) async throws -> Todo {
         try await checkToken()
         let endPoint: Endpoint = .todo(documentId: id)
-        let todoDocument: TodoCollection.TodoDocument = try await fetchDocument(from: endPoint)
+        let todoDocument: Document<TodoFields> = try await fetchDocument(from: endPoint)
 
         return todoDocument.fields.toTodo
     }
